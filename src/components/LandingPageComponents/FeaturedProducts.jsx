@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 
 const products = [
@@ -71,21 +72,38 @@ const products = [
 ];
 
 export function FeaturedProducts() {
+  const navigate = useNavigate();
+
+  const handleViewAll = () => {
+    navigate('/new-releases');
+  };
   return (
-    <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="section-padding bg-white">
+      <div className="container">
         <div className="flex items-center justify-between mb-12">
-          <div>
-            <h2 className="text-gray-900 mb-2">Featured Sneakers</h2>
-            <p className="text-gray-600">Handpicked exclusives for you</p>
+          <div className="animate-slide-up">
+            <h2 className="heading-2 text-gray-900 mb-2">Featured Sneakers</h2>
+            <p className="body-large text-gray-600">Handpicked exclusives for you</p>
           </div>
-          <button className="px-6 py-2.5 border-2 border-black text-black rounded-lg hover:bg-black hover:text-white transition-colors">
+          <button 
+            onClick={handleViewAll}
+            className="btn btn-secondary group"
+          >
             View All
+            <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} {...product} />
+          {products.map((product, index) => (
+            <div 
+              key={product.id} 
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <ProductCard {...product} />
+            </div>
           ))}
         </div>
       </div>

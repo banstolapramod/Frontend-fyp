@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -9,6 +9,46 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, user, loading: authLoading } = useAuth();
+
+  // Check for existing authentication when component loads
+  useEffect(() => {
+    if (isAuthenticated && user && !authLoading) {
+      console.log('🔑 User already authenticated, redirecting...');
+      const redirectPath = getRedirectPath(user.role);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, authLoading, navigate]);
+
+  // Get redirect path from location state or default to role-based redirect
+  const from = location.state?.from?.pathname || null;
+
+  const getRedirectPath = (role) => {
+    switch (role) {
+      case 'admin':
+        return '/admin-panel';
+      case 'vendor':
+        return '/vendor-dashboard';
+      case 'customer':
+      default:
+        return '/main';
+    }
+  };
+
+  // Show loading while auth context is initializing
+  if (authLoading) {
+    return (
+      <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+        <div className="text-center">
+          <div className="spinner-border text-dark mb-3" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,20 +62,30 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-      });
+      // Use AuthContext login method
+      const result = await login(email, password);
 
-      // ✅ Save token
-      localStorage.setItem("token", res.data.token);
+      if (result.success) {
+        console.log('🔑 Login successful:', {
+          role: result.user.role,
+          email: result.user.email,
+          name: result.user.name
+        });
 
-      // ✅ Redirect to HOME (Landing Page)
-      navigate("/");
+        // Redirect based on role or to the page they came from
+        if (from) {
+          navigate(from, { replace: true });
+        } else {
+          const redirectPath = getRedirectPath(result.user.role);
+          navigate(redirectPath, { replace: true });
+        }
+      } else {
+        setError(result.error || 'Login failed');
+      }
+
     } catch (err) {
-      setError(
-        err.response?.data?.error || "Invalid email or password"
-      );
+      console.error('❌ Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -70,6 +120,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -82,6 +133,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                 </div>
 
@@ -114,7 +166,10 @@ export default function Login() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <span className="spinner-border spinner-border-sm" />
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Signing In...
+                    </>
                   ) : (
                     "Sign In"
                   )}
@@ -123,7 +178,7 @@ export default function Login() {
 
               <div className="text-center mt-4">
                 <span className="text-muted">
-                  Don’t have an account?
+                  Don't have an account?
                 </span>{" "}
                 <a
                   href="/register"
@@ -135,7 +190,7 @@ export default function Login() {
             </div>
           </div>
 
-        <p className="text-center text-muted mt-3 small">
+          <p className="text-center text-muted mt-3 small">
             © {new Date().getFullYear()} Sneakers Spot
           </p>
         </div>

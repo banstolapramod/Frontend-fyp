@@ -1,0 +1,252 @@
+/* Vendor Dashboard Styles */
+
+/* Custom Scrollbar for Table Container */
+.table-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.table-container::-webkit-scrollbar-corner {
+  background: #f7fafc;
+}
+
+/* Smooth scrolling behavior */
+.table-container {
+  scroll-behavior: smooth;
+}
+
+/* Ensure sticky header works properly */
+.table-container thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Modal overlay improvements */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+  .table-container {
+    max-height: 400px;
+  }
+  
+  .table-container table {
+    min-width: 800px;
+  }
+}
+
+/* Card hover effects */
+.vendor-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.vendor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button hover effects */
+.vendor-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.vendor-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading animation improvements */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Status badge animations */
+.status-badge {
+  transition: all 0.2s ease-in-out;
+}
+
+.status-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Search input focus effects */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+/* Pagination button improvements */
+.pagination-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.pagination-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Table row hover effects */
+.table-row {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+/* Action button improvements */
+.action-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+/* Form container improvements */
+.form-container {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.form-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.form-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.form-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Responsive grid improvements */
+.responsive-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+}
+
+/* Dashboard layout improvements */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (min-width: 768px) {
+  .dashboard-container {
+    padding: 2rem;
+  }
+}
+
+/* Prevent content overflow */
+.content-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Stats card improvements */
+.stats-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease-in-out;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* View toggle improvements */
+.view-toggle {
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.view-toggle-button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.view-toggle-button.active {
+  background: white;
+  color: #111827;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.view-toggle-button:not(.active) {
+  color: #6b7280;
+}
+
+.view-toggle-button:not(.active):hover {
+  color: #111827;
+}

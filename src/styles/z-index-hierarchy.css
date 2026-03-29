@@ -1,0 +1,53 @@
+/* Z-Index Hierarchy for Sneakers Spot */
+
+/* 
+  Z-Index Scale:
+  1-9: Base elements
+  10-19: Dropdowns and tooltips
+  20-29: Sticky headers and navigation
+  30-39: Modals and overlays
+  40-49: Side panels and drawers
+  50-59: Toast notifications
+  60-69: Loading screens
+  70-79: Critical alerts
+  80-89: Debug tools
+  90-99: Emergency overlays
+*/
+
+/* Base Elements */
+.z-base { z-index: 1; }
+
+/* Dropdowns and Tooltips */
+.z-dropdown { z-index: 10; }
+.z-tooltip { z-index: 15; }
+
+/* Sticky Headers and Navigation */
+.z-header { z-index: 20; }
+.z-navigation { z-index: 25; }
+
+/* Modals and Overlays */
+.z-modal-overlay { z-index: 30; }
+.z-modal { z-index: 35; }
+
+/* Side Panels and Drawers */
+.z-sidebar-overlay { z-index: 40; }
+.z-sidebar { z-index: 45; }
+
+/* Admin Panel Specific */
+.z-admin-sidebar { z-index: 45; }
+.z-admin-header { z-index: 20; }
+
+/* Toast Notifications */
+.z-toast { z-index: 50; }
+
+/* Loading Screens */
+.z-loading { z-index: 60; }
+
+/* Critical Alerts */
+.z-alert { z-index: 70; }
+
+/* Debug Tools */
+.z-debug { z-index: 80; }
+
+/* Emergency Overlays */
+.z-emergency { z-index: 90; }
