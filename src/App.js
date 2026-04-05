@@ -18,12 +18,19 @@ import CustomerDashboard from "./components/CustomerDashboard";
 import VendorManagement from "./components/AdminComponents/VendorManagement";
 import UserManagement from "./components/AdminComponents/UserManagement";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import ProductDetailPage from "./components/ProductDetailPage";
+import CartPage from "./components/CartPage";
+import FavouritesPage from "./components/FavouritesPage";
+import CheckoutPage from "./components/CheckoutPage";
+import OrdersPage from "./components/OrdersPage";
+import VendorProfilePage from "./components/VendorProfilePage";
+// import CartPage from "./components/CartPage";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes - No AuthRedirect wrapper */}
+        {/* Public Routes */}
         <Route path="/" element={<LandingPageComponents />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -32,6 +39,12 @@ function App() {
         <Route path="/women" element={<WomenPage />} />
         <Route path="/brands" element={<BrandsPage />} />
         <Route path="/sale" element={<SalePage />} />
+        <Route path="/product/:productId" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/favourites" element={<FavouritesPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/vendor/:vendorId" element={<VendorProfilePage />} />
         
         {/* Protected Routes */}
         

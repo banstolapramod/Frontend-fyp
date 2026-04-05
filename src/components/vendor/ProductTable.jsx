@@ -78,7 +78,7 @@ export default function ProductTable({ onAddProduct, onEditProduct }) {
       }
 
       // Remove product from local state
-      setProducts(products.filter(p => p.product_id !== productId));
+      setProducts(products.filter(p => (p.product_id || p.id) !== productId));
       alert(`✅ Product "${productName}" deleted successfully`);
       
     } catch (error) {
@@ -338,14 +338,14 @@ export default function ProductTable({ onAddProduct, onEditProduct }) {
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedProducts.map((product, index) => (
                   <tr 
-                    key={product.product_id} 
+                    key={product.product_id || product.id} 
                     className={`hover:bg-gray-50 transition-colors ${
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-25'
                     }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="font-mono text-xs">
-                        {product.product_id.slice(0, 8)}...
+                        {(product.product_id || product.id)?.slice(0, 8)}...
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -406,12 +406,12 @@ export default function ProductTable({ onAddProduct, onEditProduct }) {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteProduct(product.product_id, product.name)}
-                          disabled={deletingProduct === product.product_id}
+                          onClick={() => handleDeleteProduct(product.product_id || product.id, product.name)}
+                          disabled={deletingProduct === (product.product_id || product.id)}
                           className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Delete Product"
                         >
-                          {deletingProduct === product.product_id ? (
+                          {deletingProduct === (product.product_id || product.id) ? (
                             <RefreshCw className="w-4 h-4 animate-spin" />
                           ) : (
                             <Trash2 className="w-4 h-4" />

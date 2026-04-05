@@ -182,7 +182,7 @@ export default function WomenPage() {
 
       console.log('🛒 Adding to cart:', product);
       
-      const result = await addToCartContext(product.id, 1);
+      const result = await addToCartContext(product.product_id || product.id, 1);
       
       if (result.success) {
         alert('✅ Added to cart successfully!');

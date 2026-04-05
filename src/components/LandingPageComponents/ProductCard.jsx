@@ -4,47 +4,36 @@ import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { getUserData } from "../../utils/auth";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
-export function ProductCard({
-  id,
-  name,
-  brand,
-  price,
-  originalPrice,
-  image,
-  condition,
-}) {
+export function ProductCard({ id, name, brand, price, originalPrice, image, condition }) {
   const navigate = useNavigate();
   const { addToCart: addToCartContext } = useCart();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { toggleWishlist, isFavourite } = useWishlist();
+  const [addingToCart, setAddingToCart] = useState(false);
 
-  const handleAddToCart = async () => {
-    try {
-      const userData = getUserData();
-      if (!userData || !userData.token) {
-        alert('Please log in to add items to cart');
-        navigate('/login');
-        return;
-      }
+  const favourite = isFavourite(id);
 
-      console.log('🛒 Adding to cart:', { id, name, brand, price });
-      
-      const result = await addToCartContext(id, 1);
-      
-      if (result.success) {
-        alert('✅ Added to cart successfully!');
-      } else {
-        alert(`❌ Failed to add to cart: ${result.error}`);
-      }
-      
-    } catch (error) {
-      console.error('❌ Error adding to cart:', error);
-      alert(`❌ Failed to add to cart: ${error.message}`);
-    }
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    const userData = getUserData();
+    if (!userData?.token) { navigate('/login'); return; }
+    setAddingToCart(true);
+    const result = await addToCartContext(id, 1);
+    setAddingToCart(false);
+    if (result.success) alert('✅ Added to cart!');
+    else alert(`❌ ${result.error}`);
+  };
+
+  const handleToggleFavourite = async (e) => {
+    e.stopPropagation();
+    const userData = getUserData();
+    if (!userData?.token) { navigate('/login'); return; }
+    await toggleWishlist(id);
   };
 
   return (
-    <div className="card group cursor-pointer animate-fade-in">
+    <div className="card group cursor-pointer animate-fade-in" onClick={() => navigate(`/product/${id}`)}>
       <div className="relative aspect-square overflow-hidden bg-gray-100 rounded-t-xl">
         <img
           src={image}
@@ -66,24 +55,24 @@ export function ProductCard({
         />
 
         <button
-          onClick={() => setIsFavorite(!isFavorite)}
-          className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white hover:shadow-lg transition-all duration-300 group/heart"
+          onClick={(e) => { e.stopPropagation(); handleToggleFavourite(e); }}
+          className="absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white hover:shadow-lg transition-all duration-300 group/heart"
         >
           <Heart
             className={`w-5 h-5 transition-all duration-300 group-hover/heart:scale-110 ${
-              isFavorite ? "fill-red-500 text-red-500" : "text-gray-600 hover:text-red-500"
+              favourite ? "fill-red-500 text-red-500" : "text-gray-600 hover:text-red-500"
             }`}
           />
         </button>
 
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 z-10">
           <span className="badge badge-primary">
             {condition}
           </span>
         </div>
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Hover overlay — pointer-events-none so it never blocks buttons */}
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </div>
 
       <div className="card-body">
@@ -109,7 +98,7 @@ export function ProductCard({
         </div>
 
         <button 
-          onClick={handleAddToCart}
+          onClick={(e) => { e.stopPropagation(); handleAddToCart(e); }}
           className="btn btn-primary w-full group/cart"
         >
           <ShoppingCart className="w-4 h-4 group-hover/cart:scale-110 transition-transform" />

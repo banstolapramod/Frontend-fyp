@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Star, Filter, X, ChevronDown } from 'lucide-react';
 import { Header } from './LandingPageComponents/Header';
 import { Footer } from './LandingPageComponents/Footer';
+import { useCart } from '../context/CartContext';
+import { getUserData } from '../utils/auth';
 
 export default function NewReleasesPage() {
   const navigate = useNavigate();
+  const { addToCart: addToCartContext } = useCart();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -181,9 +184,16 @@ export default function NewReleasesPage() {
     });
   };
 
-  const addToCart = (product) => {
-    console.log('Added to cart:', product);
-    // Add cart logic here
+  const addToCart = async (product) => {
+    const userData = getUserData();
+    if (!userData?.token) {
+      alert('Please log in to add items to cart');
+      navigate('/login');
+      return;
+    }
+    const result = await addToCartContext(product.product_id || product.id, 1);
+    if (result.success) alert('✅ Added to cart!');
+    else alert(`❌ ${result.error}`);
   };
 
   const addToWishlist = (product) => {

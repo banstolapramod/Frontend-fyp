@@ -53,7 +53,7 @@ export default function MenPage() {
           name: 'Classic Leather',
           brand: 'Reebok',
           price: 75,
-          image: 'https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=800&h=800&fit=crop&q=80',
+          image: 'https://images.unsplash.com/photo-1551107696-a4b0c5aFa0d9a2?w=800&h=800&fit=crop&q=80',
           rating: 4.5,
           reviews: 145,
           category: 'Casual',
@@ -182,7 +182,7 @@ export default function MenPage() {
 
       console.log('🛒 Adding to cart:', product);
       
-      const result = await addToCartContext(product.id, 1);
+      const result = await addToCartContext(product.product_id || product.id, 1);
       
       if (result.success) {
         alert('✅ Added to cart successfully!');

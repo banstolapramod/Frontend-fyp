@@ -403,36 +403,449 @@ function ProductsContent({ onAddProduct, onEditProduct }) {
 
 // Orders Content Component
 function OrdersContent() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [orderDetails, setOrderDetails] = useState({});
+  const [updatingId, setUpdatingId] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const STATUS_CONFIG = {
+    pending:    { label: 'Pending',    bg: '#fef9c3', color: '#854d0e' },
+    processing: { label: 'Processing', bg: '#dbeafe', color: '#1e40af' },
+    shipped:    { label: 'Shipped',    bg: '#e0f2fe', color: '#0369a1' },
+    delivered:  { label: 'Delivered',  bg: '#dcfce7', color: '#15803d' },
+    cancelled:  { label: 'Cancelled',  bg: '#fee2e2', color: '#b91c1c' },
+  };
+
+  const PAYMENT_CONFIG = {
+    pending: { label: 'Pending', bg: '#fef9c3', color: '#854d0e' },
+    paid:    { label: 'Paid',    bg: '#dcfce7', color: '#15803d' },
+    failed:  { label: 'Failed',  bg: '#fee2e2', color: '#b91c1c' },
+  };
+
+  const Badge = ({ status, config }) => {
+    const cfg = config[status] || { label: status, bg: '#f3f4f6', color: '#374151' };
+    return <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 999, background: cfg.bg, color: cfg.color }}>{cfg.label}</span>;
+  };
+
+  const authHeaders = () => {
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    return { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' };
+  };
+
+  useEffect(() => {
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    fetch('http://localhost:5001/api/orders/vendor', {
+      headers: { 'Authorization': `Bearer ${userData.token}` }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setOrders(d.orders); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggleExpand = async (orderId) => {
+    if (expandedId === orderId) { setExpandedId(null); return; }
+    setExpandedId(orderId);
+    if (orderDetails[orderId]) return;
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    const res = await fetch(`http://localhost:5001/api/orders/vendor/${orderId}`, {
+      headers: { 'Authorization': `Bearer ${userData.token}` }
+    });
+    const d = await res.json();
+    if (d.success) setOrderDetails(prev => ({ ...prev, [orderId]: d.order }));
+  };
+
+  const updateStatus = async (orderId, status) => {
+    setUpdatingId(orderId);
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    try {
+      const res = await fetch(`http://localhost:5001/api/orders/vendor/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setOrders(prev => prev.map(o => o.order_id === orderId ? { ...o, order_status: status } : o));
+        setOrderDetails(prev => prev[orderId] ? { ...prev, [orderId]: { ...prev[orderId], order_status: status } } : prev);
+      } else alert(`❌ ${d.error}`);
+    } catch (e) { alert(`❌ ${e.message}`); }
+    finally { setUpdatingId(null); }
+  };
+
+  const updatePaymentStatus = async (orderId, payment_status) => {
+    setUpdatingId(orderId + '_pay');
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    try {
+      const res = await fetch(`http://localhost:5001/api/orders/vendor/${orderId}/payment-status`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_status })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setOrders(prev => prev.map(o => o.order_id === orderId ? { ...o, payment_status } : o));
+        setOrderDetails(prev => prev[orderId] ? { ...prev, [orderId]: { ...prev[orderId], payment_status } } : prev);
+      } else alert(`❌ ${d.error}`);
+    } catch (e) { alert(`❌ ${e.message}`); }
+    finally { setUpdatingId(null); }
+  };
+  const imgSrc = (item) => {
+    if (!item.image_url) return null;
+    return item.image_url.startsWith('http') ? item.image_url : `http://localhost:5001${item.image_url}`;
+  };
+
+  const filtered = filterStatus === 'all' ? orders : orders.filter(o => o.order_status === filterStatus);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Order Management</h2>
-        <p className="text-gray-500 mt-1">Track and manage customer orders</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Order Management</h2>
+          <p className="text-gray-500 mt-1">Track and manage customer orders for your products</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              style={{ padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', background: filterStatus === s ? '#111' : '#f3f4f6', color: filterStatus === s ? '#fff' : '#374151' }}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <p className="text-gray-500 text-center py-12">
-          Order management functionality will be implemented here.
-        </p>
-      </div>
+      {loading ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto" />
+          <p className="text-gray-500 mt-3">Loading orders...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+          <p className="text-gray-400 text-lg">No orders found.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(order => {
+            const isOpen = expandedId === order.order_id;
+            const detail = orderDetails[order.order_id];
+            const isUpdating = updatingId === order.order_id;
+
+            return (
+              <div key={order.order_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                {/* Header row */}
+                <div
+                  onClick={() => toggleExpand(order.order_id)}
+                  className="flex items-center gap-4 p-5 cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <ShoppingBag className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-sm font-bold text-gray-900 font-mono">#{order.order_id.slice(0, 8).toUpperCase()}</span>
+                      <Badge status={order.order_status} config={STATUS_CONFIG} />
+                      <Badge status={order.payment_status} config={PAYMENT_CONFIG} />
+                    </div>
+                    <div className="flex gap-4 text-xs text-gray-400 flex-wrap">
+                      <span>👤 {order.customer_name || order.full_name}</span>
+                      <span>📧 {order.customer_email || order.email}</span>
+                      <span>📅 {new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      <span>{order.payment_method === 'cod' ? '💵 COD' : '💳 Card'}</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg font-bold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</p>
+                    <p className="text-xs text-gray-400">{isOpen ? '▲ Hide' : '▼ Details'}</p>
+                  </div>
+                </div>
+
+                {/* Expanded */}
+                {isOpen && (
+                  <div className="border-t border-gray-100 p-5">
+                    {!detail ? (
+                      <div className="flex justify-center py-6">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                        {/* Items */}
+                        <div className="lg:col-span-2">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Items Ordered</p>
+                          <div className="space-y-2">
+                            {detail.items.map((item, i) => (
+                              <div key={i} className="flex gap-3 items-center p-3 bg-gray-50 rounded-xl">
+                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                                  {imgSrc(item) ? <img src={imgSrc(item)} alt={item.name} className="w-full h-full object-cover" /> : <Package className="w-6 h-6 text-gray-400 m-3" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                                  <p className="text-xs text-gray-400">{item.brand} · Qty: {item.quantity}</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className="text-sm font-bold text-gray-900">${parseFloat(item.subtotal).toFixed(2)}</p>
+                                  <p className="text-xs text-gray-400">${parseFloat(item.price_per_unit).toFixed(2)} each</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Right panel */}
+                        <div className="space-y-4">
+                          {/* Customer & Address */}
+                          <div className="bg-gray-50 rounded-xl p-4">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Customer & Delivery</p>
+                            {[
+                              ['Name', detail.full_name],
+                              ['Email', detail.customer_email || detail.email],
+                              ['Phone', detail.phone],
+                              ['Address', detail.address_line],
+                              ['City', detail.city],
+                              ['State', detail.state],
+                              ['ZIP', detail.zip],
+                              ['Country', detail.country],
+                            ].map(([label, value]) => value ? (
+                              <div key={label} className="flex justify-between text-xs mb-1.5">
+                                <span className="text-gray-400">{label}</span>
+                                <span className="font-semibold text-gray-800 text-right max-w-[60%] truncate">{value}</span>
+                              </div>
+                            ) : null)}
+                          </div>
+
+                          {/* Status actions */}
+                          <div className="bg-gray-50 rounded-xl p-4">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Update Order Status</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[
+                                { status: 'processing', label: 'Processing', color: '#1e40af', bg: '#dbeafe' },
+                                { status: 'shipped',    label: 'Shipped',    color: '#0369a1', bg: '#e0f2fe' },
+                                { status: 'delivered',  label: 'Delivered',  color: '#15803d', bg: '#dcfce7' },
+                                { status: 'cancelled',  label: 'Cancelled',  color: '#b91c1c', bg: '#fee2e2' },
+                              ].map(({ status, label, color, bg }) => (
+                                <button
+                                  key={status}
+                                  onClick={() => updateStatus(order.order_id, status)}
+                                  disabled={isUpdating || detail.order_status === status}
+                                  style={{ padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: detail.order_status === status ? 'default' : 'pointer', background: detail.order_status === status ? bg : '#fff', color: detail.order_status === status ? color : '#374151', border: `1px solid ${detail.order_status === status ? color : '#e5e7eb'}`, opacity: isUpdating ? 0.6 : 1 }}
+                                >
+                                  {isUpdating === order.order_id ? '...' : label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Payment status actions */}
+                          <div className="bg-gray-50 rounded-xl p-4">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Update Payment Status</p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { status: 'pending', label: 'Pending', color: '#854d0e', bg: '#fef9c3' },
+                                { status: 'paid',    label: 'Paid',    color: '#15803d', bg: '#dcfce7' },
+                                { status: 'failed',  label: 'Failed',  color: '#b91c1c', bg: '#fee2e2' },
+                              ].map(({ status, label, color, bg }) => (
+                                <button
+                                  key={status}
+                                  onClick={() => updatePaymentStatus(order.order_id, status)}
+                                  disabled={updatingId === order.order_id + '_pay' || detail.payment_status === status}
+                                  style={{ padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: detail.payment_status === status ? 'default' : 'pointer', background: detail.payment_status === status ? bg : '#fff', color: detail.payment_status === status ? color : '#374151', border: `1px solid ${detail.payment_status === status ? color : '#e5e7eb'}`, opacity: updatingId === order.order_id + '_pay' ? 0.6 : 1 }}
+                                >
+                                  {updatingId === order.order_id + '_pay' ? '...' : label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
 // Customers Content Component
 function CustomersContent() {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const STATUS_CONFIG = {
+    pending:    { label: 'Pending',    bg: '#fef9c3', color: '#854d0e' },
+    processing: { label: 'Processing', bg: '#dbeafe', color: '#1e40af' },
+    shipped:    { label: 'Shipped',    bg: '#e0f2fe', color: '#0369a1' },
+    delivered:  { label: 'Delivered',  bg: '#dcfce7', color: '#15803d' },
+    cancelled:  { label: 'Cancelled',  bg: '#fee2e2', color: '#b91c1c' },
+  };
+
+  const Badge = ({ status, config }) => {
+    const cfg = config[status] || { label: status, bg: '#f3f4f6', color: '#374151' };
+    return <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 999, background: cfg.bg, color: cfg.color }}>{cfg.label}</span>;
+  };
+
+  useEffect(() => {
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    fetch('http://localhost:5001/api/orders/vendor/customers', {
+      headers: { 'Authorization': `Bearer ${userData.token}` }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setCustomers(d.customers); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const openCustomer = async (customer) => {
+    setSelected(customer);
+    setDetail(null);
+    setLoadingDetail(true);
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    try {
+      const res = await fetch(`http://localhost:5001/api/orders/vendor/customers/${customer.user_id}`, {
+        headers: { 'Authorization': `Bearer ${userData.token}` }
+      });
+      const d = await res.json();
+      if (d.success) setDetail(d);
+    } catch (e) { console.error(e); }
+    finally { setLoadingDetail(false); }
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-gray-900">Customers</h2>
-        <p className="text-gray-500 mt-1">View and manage your customers</p>
+        <p className="text-gray-500 mt-1">Customers who have ordered your products</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <p className="text-gray-500 text-center py-12">
-          Customer management functionality will be implemented here.
-        </p>
-      </div>
+      {loading ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto" />
+          <p className="text-gray-500 mt-3">Loading customers...</p>
+        </div>
+      ) : customers.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+          <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 text-lg">No customers yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.4fr' : '1fr', gap: 20 }}>
+
+          {/* Customer list */}
+          <div className="space-y-3">
+            {customers.map(c => (
+              <div
+                key={c.user_id}
+                onClick={() => openCustomer(c)}
+                className={`bg-white rounded-2xl border p-4 cursor-pointer transition-all hover:shadow-md ${selected?.user_id === c.user_id ? 'border-emerald-500 shadow-md' : 'border-gray-100'}`}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#10b981,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>{c.name?.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{c.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-gray-900">{c.total_orders} orders</p>
+                    <p className="text-xs text-emerald-600 font-semibold">${parseFloat(c.total_spent || 0).toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 mt-2 text-xs text-gray-400">
+                  <span>Member since {formatDate(c.member_since)}</span>
+                  <span>Last order: {formatDate(c.last_order_date)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Customer detail panel */}
+          {selected && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+              {/* Header */}
+              <div style={{ background: 'linear-gradient(135deg,#064e3b,#065f46)', padding: '24px 24px 20px' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 22 }}>{selected.name?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <p style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{selected.name}</p>
+                      <p style={{ color: '#a7f3d0', fontSize: 13 }}>{selected.email}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelected(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '6px 10px', color: '#fff', cursor: 'pointer', fontSize: 13 }}>✕</button>
+                </div>
+                <div className="flex gap-4">
+                  {[
+                    ['Orders', selected.total_orders],
+                    ['Spent', `$${parseFloat(selected.total_spent || 0).toFixed(2)}`],
+                    ['Since', formatDate(selected.member_since)],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
+                      <p style={{ color: '#a7f3d0', fontSize: 11, margin: '0 0 2px' }}>{label}</p>
+                      <p style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0 }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Orders list */}
+              <div style={{ padding: 20, maxHeight: 420, overflowY: 'auto' }}>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Order History</p>
+                {loadingDetail ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
+                  </div>
+                ) : detail?.orders?.length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-6">No orders found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {detail?.orders?.map(order => (
+                      <div key={order.order_id} style={{ background: '#f9fafb', borderRadius: 12, padding: '12px 14px' }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#111', fontFamily: 'monospace' }}>
+                            #{order.order_id.slice(0, 8).toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>
+                            ${parseFloat(order.total_price).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge status={order.order_status} config={STATUS_CONFIG} />
+                          <span style={{ fontSize: 11, color: '#9ca3af' }}>{formatDate(order.created_at)}</span>
+                          <span style={{ fontSize: 11, color: '#9ca3af' }}>{order.payment_method === 'cod' ? '💵 COD' : '💳 Card'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

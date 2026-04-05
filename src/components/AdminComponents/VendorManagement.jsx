@@ -152,7 +152,7 @@ export default function VendorManagement() {
       
       // Update local state
       setVendors(vendors.map(v => 
-        v.user_id === vendorId ? { ...v, vendor_status: newStatus } : v
+        (v.id || v.user_id) === vendorId ? { ...v, vendor_status: newStatus } : v
       ));
       
       // Show success message
@@ -362,8 +362,10 @@ export default function VendorManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredVendors.map((vendor) => (
-                <tr key={vendor.user_id} className="hover:bg-gray-50 transition-colors">
+              {filteredVendors.map((vendor) => {
+                const vid = vendor.id || vendor.user_id;
+                return (
+                <tr key={vid} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
@@ -371,7 +373,7 @@ export default function VendorManagement() {
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-semibold text-gray-900">{vendor.name}</p>
-                        <p className="text-xs text-gray-500">ID: {vendor.user_id}</p>
+                        <p className="text-xs text-gray-500">ID: {vid?.slice(0, 8)}...</p>
                       </div>
                     </div>
                   </td>
@@ -396,59 +398,39 @@ export default function VendorManagement() {
                       {vendor.vendor_status === 'pending' && (
                         <>
                           <button 
-                            onClick={() => handleStatusChange(vendor.user_id, 'approved')}
-                            disabled={updatingStatus === vendor.user_id}
+                            onClick={() => handleStatusChange(vid, 'approved')}
+                            disabled={updatingStatus === vid}
                             className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 text-xs font-medium flex items-center space-x-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Approve Vendor"
                           >
-                            {updatingStatus === vendor.user_id ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4" />
-                            )}
+                            {updatingStatus === vid ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                             <span>Approve</span>
                           </button>
                           <button 
-                            onClick={() => handleStatusChange(vendor.user_id, 'rejected')}
-                            disabled={updatingStatus === vendor.user_id}
+                            onClick={() => handleStatusChange(vid, 'rejected')}
+                            disabled={updatingStatus === vid}
                             className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-xs font-medium flex items-center space-x-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Reject Vendor"
                           >
-                            {updatingStatus === vendor.user_id ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <XCircle className="w-4 h-4" />
-                            )}
+                            {updatingStatus === vid ? <RefreshCw className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                             <span>Reject</span>
                           </button>
                         </>
                       )}
                       {vendor.vendor_status === 'approved' && (
                         <button 
-                          onClick={() => handleStatusChange(vendor.user_id, 'rejected')}
-                          disabled={updatingStatus === vendor.user_id}
+                          onClick={() => handleStatusChange(vid, 'rejected')}
+                          disabled={updatingStatus === vid}
                           className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Reject Vendor"
                         >
-                          {updatingStatus === vendor.user_id ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Reject'
-                          )}
+                          {updatingStatus === vid ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Reject'}
                         </button>
                       )}
                       {vendor.vendor_status === 'rejected' && (
                         <button 
-                          onClick={() => handleStatusChange(vendor.user_id, 'approved')}
-                          disabled={updatingStatus === vendor.user_id}
+                          onClick={() => handleStatusChange(vid, 'approved')}
+                          disabled={updatingStatus === vid}
                           className="px-3 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Approve Vendor"
                         >
-                          {updatingStatus === vendor.user_id ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Approve'
-                          )}
+                          {updatingStatus === vid ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Approve'}
                         </button>
                       )}
                       <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
@@ -460,7 +442,7 @@ export default function VendorManagement() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         </div>

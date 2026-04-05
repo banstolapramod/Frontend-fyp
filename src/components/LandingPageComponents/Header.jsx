@@ -1,14 +1,17 @@
-import { ShoppingCart, Search, User, Menu } from "lucide-react";
+import { ShoppingCart, Search, User, Menu, Heart } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchModal } from "./SearchModal";
 import { AccountMenu } from "./AccountMenu";
 import { CartSidebar } from "./CartSidebar";
 import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 export function Header() {
   const navigate = useNavigate();
-  const { count: cartCount } = useCart();
+  const { getCartItemCount } = useCart();
+  const cartCount = getCartItemCount();
+  const { count: wishlistCount } = useWishlist();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -73,8 +76,21 @@ export function Header() {
               <AccountMenu isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
             </div>
             
+            {/* Favourites */}
+            <button
+              onClick={() => navigate('/favourites')}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-all duration-300 hover:shadow-md group"
+            >
+              <Heart className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
+            </button>
+
             <button 
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => navigate('/cart')}
               className="relative p-2 hover:bg-gray-100 rounded-full transition-all duration-300 hover:shadow-md group"
             >
               <ShoppingCart className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />

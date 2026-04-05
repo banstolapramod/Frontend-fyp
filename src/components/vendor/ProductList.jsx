@@ -74,7 +74,7 @@ export default function ProductList({ onAddProduct, onEditProduct }) {
       }
 
       // Remove product from local state
-      setProducts(products.filter(p => p.product_id !== productId));
+      setProducts(products.filter(p => (p.product_id || p.id) !== productId));
       alert(`✅ Product "${productName}" deleted successfully`);
       
     } catch (error) {
@@ -218,7 +218,7 @@ export default function ProductList({ onAddProduct, onEditProduct }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div key={product.product_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+            <div key={product.product_id || product.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
               <ImageWithFallback
                 src={product.image_url ? 
                   (product.image_url.startsWith('http') ? 
@@ -278,12 +278,12 @@ export default function ProductList({ onAddProduct, onEditProduct }) {
                     Edit
                   </button>
                   <button 
-                    onClick={() => handleDeleteProduct(product.product_id, product.name)}
-                    disabled={deletingProduct === product.product_id}
+                    onClick={() => handleDeleteProduct(product.product_id || product.id, product.name)}
+                    disabled={deletingProduct === (product.product_id || product.id)}
                     className="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Delete Product"
                   >
-                    {deletingProduct === product.product_id ? (
+                    {deletingProduct === (product.product_id || product.id) ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <Trash2 className="w-4 h-4" />

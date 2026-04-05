@@ -25,33 +25,14 @@ export default function ProductModal({ product, onClose, onSave }) {
   const isEditing = !!product;
 
   useEffect(() => {
-    // Fetch categories when component mounts
     fetchCategories();
     
     if (product) {
-      // For editing, we need to map category name back to category_id
-      let categoryId = '';
-      if (product.category) {
-        // Reverse map category name to category_id
-        const reverseCategoryMap = {
-          'Sneakers': 1,
-          'Running Shoes': 2,
-          'Basketball Shoes': 3,
-          'Casual Shoes': 4,
-          'Boots': 5,
-          'Sandals': 6,
-          'Formal Shoes': 7,
-          'Athletic Shoes': 8
-        };
-        categoryId = reverseCategoryMap[product.category] || '';
-        console.log(`🔍 Mapped category "${product.category}" to category_id: ${categoryId}`);
-      }
-      
       setFormData({
         name: product.name || '',
         description: product.description || '',
         price: product.price || '',
-        category_id: categoryId,
+        category_id: product.category_id || '',  // use UUID directly if available
         brand: product.brand || '',
         size: product.size || '',
         color: product.color || '',
@@ -59,7 +40,6 @@ export default function ProductModal({ product, onClose, onSave }) {
         image_url: product.image_url || ''
       });
 
-      // Set image preview for existing product
       if (product.image_url) {
         const fullImageUrl = product.image_url.startsWith('http') 
           ? product.image_url 
@@ -153,18 +133,12 @@ export default function ProductModal({ product, onClose, onSave }) {
         throw new Error('Please fill in all required fields');
       }
 
-      // Validate price and stock quantity
       if (isNaN(parseFloat(formData.price)) || parseFloat(formData.price) <= 0) {
         throw new Error('Price must be a valid positive number');
       }
 
       if (isNaN(parseInt(formData.stock_quantity)) || parseInt(formData.stock_quantity) < 0) {
         throw new Error('Stock quantity must be a valid non-negative number');
-      }
-
-      // Validate category_id
-      if (isNaN(parseInt(formData.category_id)) || parseInt(formData.category_id) <= 0) {
-        throw new Error('Please select a valid category');
       }
 
       const userData = getUserData();
@@ -185,7 +159,7 @@ export default function ProductModal({ product, onClose, onSave }) {
       formDataToSend.append('description', formData.description);
       formDataToSend.append('price', parseFloat(formData.price));
       formDataToSend.append('stock_quantity', parseInt(formData.stock_quantity));
-      formDataToSend.append('category_id', parseInt(formData.category_id));
+      formDataToSend.append('category_id', formData.category_id); // UUID string
       formDataToSend.append('brand', formData.brand);
       
       if (formData.size) formDataToSend.append('size', formData.size);
@@ -197,13 +171,19 @@ export default function ProductModal({ product, onClose, onSave }) {
         console.log('🔍 Adding image file to form data:', selectedImage.name);
       }
 
-      console.log('🔍 Sending product data with FormData');
+      // Debug: Log all form data entries
+      console.log('🔍 FormData contents:');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`  ${key}:`, value);
+      }
 
       const url = isEditing 
-        ? `http://localhost:5001/api/products/${product.product_id}`
+        ? `http://localhost:5001/api/products/${product.product_id || product.id}`
         : 'http://localhost:5001/api/products';
       
       const method = isEditing ? 'PUT' : 'POST';
+
+      console.log('🔍 Sending product data with FormData to:', url);
 
       const response = await fetch(url, {
         method,
@@ -215,9 +195,16 @@ export default function ProductModal({ product, onClose, onSave }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Product creation/update failed:', errorData);
-        throw new Error(errorData.error || `Failed to ${isEditing ? 'update' : 'create'} product`);
+        let errorMessage = `Failed to ${isEditing ? 'update' : 'create'} product`;
+        try {
+          const errorData = await response.json();
+          console.error('❌ Product creation/update failed:', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error('❌ Failed to parse error response:', parseError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

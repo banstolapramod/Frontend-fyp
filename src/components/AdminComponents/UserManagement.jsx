@@ -139,7 +139,7 @@ export default function UserManagement() {
       console.log(`✅ Admin ${userData.email} deleted user ${userId}:`, data);
       
       // Remove user from local state
-      setUsers(users.filter(u => u.user_id !== userId));
+      setUsers(users.filter(u => (u.user_id || u.id) !== userId));
       
       alert(`✅ User "${userName}" has been deleted successfully`);
       
@@ -345,7 +345,7 @@ export default function UserManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredUsers.map((user) => (
-                <tr key={user.user_id} className="hover:bg-gray-50 transition-colors">
+                <tr key={user.user_id || user.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg ${
@@ -357,7 +357,7 @@ export default function UserManagement() {
                       </div>
                       <div className="ml-4">
                         <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">ID: {user.user_id.slice(0, 8)}...</p>
+                        <p className="text-xs text-gray-500">ID: {(user.user_id || user.id)?.slice(0, 8)}...</p>
                       </div>
                     </div>
                   </td>
@@ -392,12 +392,12 @@ export default function UserManagement() {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => handleDeleteUser(user.user_id, user.name)}
-                        disabled={deletingUser === user.user_id}
+                        onClick={() => handleDeleteUser(user.user_id || user.id, user.name)}
+                        disabled={deletingUser === (user.user_id || user.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
                         title="Delete User"
                       >
-                        {deletingUser === user.user_id ? (
+                        {deletingUser === (user.user_id || user.id) ? (
                           <RefreshCw className="w-4 h-4 animate-spin" />
                         ) : (
                           <Trash2 className="w-4 h-4" />
