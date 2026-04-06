@@ -25,7 +25,7 @@ export function FeaturedProducts() {
           </div>
           <button
             onClick={() => navigate("/new-releases")}
-            className="btn btn-secondary group"
+            className="btn btn-secondary bg-black text-sm group"
           >
             View All
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -24,6 +24,7 @@ import FavouritesPage from "./components/FavouritesPage";
 import CheckoutPage from "./components/CheckoutPage";
 import OrdersPage from "./components/OrdersPage";
 import VendorProfilePage from "./components/VendorProfilePage";
+import CategoryPage from "./components/CategoryPage";
 // import CartPage from "./components/CartPage";
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/vendor/:vendorId" element={<VendorProfilePage />} />
+        <Route path="/category/:categoryId" element={<CategoryPage />} />
         
         {/* Protected Routes */}
         

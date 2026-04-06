@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchModal } from "./SearchModal";
 import { AccountMenu } from "./AccountMenu";
-import { CartSidebar } from "./CartSidebar";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
@@ -36,31 +35,11 @@ export function Header() {
             </h1>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {[
-              { label: 'New Releases', path: '/new-releases' },
-              { label: 'Men', path: '/men' },
-              { label: 'Women', path: '/women' },
-              { label: 'Brands', path: '/brands' },
-              { label: 'Sale', path: '/sale' }
-            ].map((item) => (
-              <button 
-                key={item.path}
-                onClick={() => handleNavigation(item.path)}
-                className="body-normal text-gray-700 hover:text-gray-900 transition-colors duration-300 relative group"
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-900 transition-all duration-300 group-hover:w-full"></span>
-              </button>
-            ))}
-          </nav>
-
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setIsSearchOpen(true)}
-              className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-all duration-300 hover:shadow-md"
+              className="hidden sm:flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-all duration-300 hover:shadow-md mx-2"
             >
               <Search className="w-4 h-4 text-gray-600" />
               <span className="body-small text-gray-600">Search</span>
@@ -95,9 +74,9 @@ export function Header() {
             >
               <ShoppingCart className="w-5 h-5 text-gray-700 group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-medium animate-scale-in">
+                <p className="absolute top-0 right-0 w-4 h-4 bg-green text-xs text-white rounded-full flex items-center justify-center text-xs font-medium animate-scale-in">
                   {cartCount > 99 ? '99+' : cartCount}
-                </span>
+                </p>
               )}
             </button>
             
@@ -109,44 +88,10 @@ export function Header() {
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 animate-slide-up">
-            <nav className="flex flex-col space-y-3">
-              <button 
-                onClick={() => {
-                  setIsSearchOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-2 text-gray-700 hover:text-black transition-colors text-left p-2 hover:bg-gray-50 rounded-lg"
-              >
-                <Search className="w-4 h-4" />
-                Search
-              </button>
-              {[
-                { label: 'New Releases', path: '/new-releases' },
-                { label: 'Men', path: '/men' },
-                { label: 'Women', path: '/women' },
-                { label: 'Brands', path: '/brands' },
-                { label: 'Sale', path: '/sale' }
-              ].map((item) => (
-                <button 
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  className="text-gray-700 hover:text-black transition-colors text-left p-2 hover:bg-gray-50 rounded-lg"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        )}
       </div>
 
       {/* Modals and Sidebars */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </header>
   );
 }

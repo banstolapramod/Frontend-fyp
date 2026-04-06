@@ -314,7 +314,7 @@ export default function ProductModal({ product, onClose, onSave }) {
                   required
                 />
               </div>
-
+              
               <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Stock Quantity *
@@ -505,7 +505,7 @@ export default function ProductModal({ product, onClose, onSave }) {
               type="submit"
               form="product-form"
               disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-black text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>

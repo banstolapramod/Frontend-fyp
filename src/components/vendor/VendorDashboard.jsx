@@ -246,7 +246,7 @@ export default function VendorDashboard() {
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <div className="dashboard-container">
-            {activeTab === 'dashboard' && <DashboardContent stats={stats} />}
+            {activeTab === 'dashboard' && <DashboardContent />}
             {activeTab === 'products' && (
               <ProductsContent 
                 onAddProduct={handleAddProduct}
@@ -274,62 +274,86 @@ export default function VendorDashboard() {
 }
 
 // Dashboard Content Component
-function DashboardContent({ stats }) {
+function DashboardContent() {
+  const [realStats, setRealStats] = useState(null);
+  const [recentOrders, setRecentOrders] = useState([]);
+
+  useEffect(() => {
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    const headers = { 'Authorization': `Bearer ${userData.token}` };
+
+    // Fetch vendor stats
+    fetch('http://localhost:5001/api/products/vendor/stats', { headers })
+      .then(r => r.json())
+      .then(d => { if (d.stats) setRealStats(d.stats); })
+      .catch(console.error);
+
+    // Fetch recent orders
+    fetch('http://localhost:5001/api/orders/vendor', { headers })
+      .then(r => r.json())
+      .then(d => { if (d.orders) setRecentOrders(d.orders.slice(0, 5)); })
+      .catch(console.error);
+  }, []);
+
+  const STATUS_COLORS = {
+    pending:    'bg-amber-100 text-amber-700',
+    processing: 'bg-blue-100 text-blue-700',
+    shipped:    'bg-sky-100 text-sky-700',
+    delivered:  'bg-green-100 text-green-700',
+    cancelled:  'bg-red-100 text-red-700',
+  };
+
+  const cards = [
+    { label: 'Total Products', value: realStats?.total_products ?? '—', bg: 'bg-emerald-50', color: 'text-emerald-600', icon: Package },
+    { label: 'Total Stock',    value: realStats?.total_stock    ?? '—', bg: 'bg-blue-50',    color: 'text-blue-600',    icon: ShoppingCart },
+    { label: 'Low Stock',      value: realStats?.low_stock      ?? '—', bg: 'bg-amber-50',   color: 'text-amber-600',   icon: TrendingUp },
+    { label: 'Out of Stock',   value: realStats?.out_of_stock   ?? '—', bg: 'bg-red-50',     color: 'text-red-600',     icon: DollarSign },
+  ];
+
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8 text-white">
         <h2 className="text-3xl font-bold mb-2">Welcome to your store! 🏪</h2>
         <p className="text-emerald-100">Manage your products, track orders, and grow your business.</p>
       </div>
-      
-      {/* Stats Grid */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:scale-105">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.bgColor} w-14 h-14 rounded-xl flex items-center justify-center`}>
-                <stat.icon className={`w-7 h-7 ${stat.iconColor}`} />
-              </div>
-              <div className="flex items-center space-x-1">
-                <TrendingUp className={`w-4 h-4 ${stat.changeColor}`} />
-                <span className={`text-sm font-bold ${stat.changeColor}`}>{stat.change}</span>
-              </div>
+        {cards.map((c, i) => (
+          <div key={i} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className={`${c.bg} w-14 h-14 rounded-xl flex items-center justify-center mb-4`}>
+              <c.icon className={`w-7 h-7 ${c.color}`} />
             </div>
-            <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.label}</h3>
-            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+            <h3 className="text-gray-500 text-sm font-medium mb-1">{c.label}</h3>
+            <p className="text-3xl font-bold text-gray-900">{c.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Recent Orders */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
         <div className="px-6 py-5 border-b border-gray-100">
           <h3 className="text-xl font-bold text-gray-900">Recent Orders</h3>
-          <p className="text-sm text-gray-500 mt-1">Latest orders from your customers</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+            <thead className="bg-gray-50">
+              <tr>
+                {['Order ID', 'Customer', 'Amount', 'Date', 'Status'].map(h => (
+                  <th key={h} className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">#ORD-{2000 + i}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">Customer {i}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">Air Jordan {i}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">${150 + i * 20}</td>
+              {recentOrders.length === 0 ? (
+                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No orders yet</td></tr>
+              ) : recentOrders.map(o => (
+                <tr key={o.order_id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 text-sm font-mono font-bold text-gray-900">#{o.order_id.slice(0,8).toUpperCase()}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700">{o.customer_name || o.full_name || '—'}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">${parseFloat(o.total_price).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{new Date(o.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
-                    <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
-                      Processing
-                    </span>
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${STATUS_COLORS[o.order_status] || 'bg-gray-100 text-gray-700'}`}>{o.order_status}</span>
                   </td>
                 </tr>
               ))}
@@ -645,24 +669,12 @@ function OrdersContent() {
                             </div>
                           </div>
 
-                          {/* Payment status actions */}
+                          {/* Payment status — read only for vendor, managed by admin */}
                           <div className="bg-gray-50 rounded-xl p-4">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Update Payment Status</p>
-                            <div className="grid grid-cols-3 gap-2">
-                              {[
-                                { status: 'pending', label: 'Pending', color: '#854d0e', bg: '#fef9c3' },
-                                { status: 'paid',    label: 'Paid',    color: '#15803d', bg: '#dcfce7' },
-                                { status: 'failed',  label: 'Failed',  color: '#b91c1c', bg: '#fee2e2' },
-                              ].map(({ status, label, color, bg }) => (
-                                <button
-                                  key={status}
-                                  onClick={() => updatePaymentStatus(order.order_id, status)}
-                                  disabled={updatingId === order.order_id + '_pay' || detail.payment_status === status}
-                                  style={{ padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: detail.payment_status === status ? 'default' : 'pointer', background: detail.payment_status === status ? bg : '#fff', color: detail.payment_status === status ? color : '#374151', border: `1px solid ${detail.payment_status === status ? color : '#e5e7eb'}`, opacity: updatingId === order.order_id + '_pay' ? 0.6 : 1 }}
-                                >
-                                  {updatingId === order.order_id + '_pay' ? '...' : label}
-                                </button>
-                              ))}
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payment Status</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <Badge status={detail.payment_status} config={PAYMENT_CONFIG} />
+                              <span className="text-xs text-gray-400 italic">Managed by admin</span>
                             </div>
                           </div>
                         </div>
@@ -852,17 +864,64 @@ function CustomersContent() {
 
 // Profile Content Component
 function ProfileContent() {
+  const { getUserData } = require('../../utils/auth');
+  const userData = getUserData();
+  const [name, setName] = useState(userData?.name || '');
+  const [email, setEmail] = useState(userData?.email || '');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true); setMsg('');
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+      const d = await res.json();
+      if (d.message) {
+        setMsg('✅ Profile updated');
+        localStorage.setItem('userName', name);
+        localStorage.setItem('userEmail', email);
+      } else setMsg(`❌ ${d.error}`);
+    } catch (e) { setMsg(`❌ ${e.message}`); }
+    finally { setSaving(false); }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-gray-900">Store Profile</h2>
-        <p className="text-gray-500 mt-1">Manage your store information and settings</p>
+        <p className="text-gray-500 mt-1">Your public seller information</p>
       </div>
-
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <p className="text-gray-500 text-center py-12">
-          Store profile management functionality will be implemented here.
-        </p>
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 max-w-lg">
+        {/* Avatar */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-2xl font-bold">
+            {name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 text-lg">{name}</p>
+            <p className="text-sm text-gray-500">{email}</p>
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">Verified Vendor</span>
+          </div>
+        </div>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          {msg && <p className="text-sm font-medium">{msg}</p>}
+          <button type="submit" disabled={saving} className="w-full py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-semibold disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -870,17 +929,56 @@ function ProfileContent() {
 
 // Settings Content Component
 function SettingsContent() {
+  const { getUserData } = require('../../utils/auth');
+  const userData = getUserData();
+  const [current, setCurrent] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const handleChange = async (e) => {
+    e.preventDefault();
+    if (newPwd !== confirm) { setMsg('❌ Passwords do not match'); return; }
+    if (newPwd.length < 6) { setMsg('❌ Password must be at least 6 characters'); return; }
+    setSaving(true); setMsg('');
+    try {
+      const res = await fetch('http://localhost:5001/api/auth/change-password', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+      });
+      const d = await res.json();
+      setMsg(d.message ? '✅ Password changed successfully' : `❌ ${d.error}`);
+      if (d.message) { setCurrent(''); setNewPwd(''); setConfirm(''); }
+    } catch (e) { setMsg(`❌ ${e.message}`); }
+    finally { setSaving(false); }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold text-gray-900">Settings</h2>
-        <p className="text-gray-500 mt-1">Configure your store preferences</p>
+        <p className="text-gray-500 mt-1">Manage your account security</p>
       </div>
-
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <p className="text-gray-500 text-center py-12">
-          Settings functionality will be implemented here.
-        </p>
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 max-w-lg">
+        <h3 className="text-lg font-bold text-gray-900 mb-6">Change Password</h3>
+        <form onSubmit={handleChange} className="space-y-4">
+          {[
+            ['Current Password', current, setCurrent],
+            ['New Password', newPwd, setNewPwd],
+            ['Confirm New Password', confirm, setConfirm],
+          ].map(([label, val, setter]) => (
+            <div key={label}>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
+              <input type="password" value={val} onChange={e => setter(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="••••••••" />
+            </div>
+          ))}
+          {msg && <p className="text-sm font-medium">{msg}</p>}
+          <button type="submit" disabled={saving} className="w-full py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-colors font-semibold disabled:opacity-50">
+            {saving ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
       </div>
     </div>
   );

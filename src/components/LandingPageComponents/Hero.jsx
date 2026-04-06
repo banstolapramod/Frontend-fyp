@@ -49,10 +49,7 @@ export function Hero() {
             {/* Main Heading */}
             <div className="space-y-4">
               <h1 className="text-6xl lg:text-7xl font-extrabold leading-tight">
-                <span className="block text-white">Step Into</span>
-                <span className="block bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-                  Premium Style
-                </span>
+                <span className="block text-white">Step Into Premium Style</span>
               </h1>
               <div className="w-24 h-1 bg-gradient-to-r from-primary-500 to-accent-500 rounded-full"></div>
             </div>

@@ -285,13 +285,6 @@ export default function CategoryManagement() {
                   Edit
                 </button>
                 <button 
-                  onClick={() => handleToggleStatus(category.category_id, category.is_active)}
-                  className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-                  title={category.is_active ? 'Deactivate' : 'Activate'}
-                >
-                  {category.is_active ? 'Deactivate' : 'Activate'}
-                </button>
-                <button 
                   onClick={() => handleDeleteCategory(category.category_id, category.name)}
                   className="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors"
                   title="Delete Category"

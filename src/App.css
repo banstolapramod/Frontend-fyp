@@ -184,3 +184,8 @@
     font-size: 0.9rem;
   }
 }
+
+.bg-red { background-color: #ef4444; }
+.bg-green { background-color: #22c55e; }
+
+.text-base--line-height { line-height: 1.5; }

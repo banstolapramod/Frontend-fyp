@@ -336,9 +336,6 @@ export default function UserManagement() {
                   Join Date
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -379,9 +376,6 @@ export default function UserManagement() {
                         day: 'numeric'
                       })}
                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(user.is_active)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">

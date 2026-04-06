@@ -6,13 +6,13 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-white mb-4">Shop</h3>
+            <h3 className="text-white mb-4">Categories</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="hover:text-white transition-colors">New Releases</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Men</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Women</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Kids</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Sale</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Formal Shoes</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Running Shoes</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Basketball Shoes</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Casual Shoes</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Sneakers</a></li>
             </ul>
           </div>
           <div>
