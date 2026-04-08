@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { getUserData } from "../../utils/auth";
+import { formatPrice } from "../../utils/currency";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
@@ -83,10 +84,10 @@ export function ProductCard({ id, name, brand, price, originalPrice, image, cond
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="heading-6 text-gray-900">${price}</span>
+            <span className="heading-6 text-gray-900">{formatPrice(price)}</span>
             {originalPrice && (
               <span className="body-small text-gray-400 line-through">
-                ${originalPrice}
+                {formatPrice(originalPrice)}
               </span>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Package, ArrowLeft } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { formatPrice } from '../utils/currency';
 import { useCart } from '../context/CartContext';
 import { Header } from './LandingPageComponents/Header';
 import { Footer } from './LandingPageComponents/Footer';
@@ -92,7 +93,7 @@ export default function FavouritesPage() {
                   <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px' }}>{item.category}</p>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>${parseFloat(item.price).toFixed(2)}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{formatPrice(item.price)}</span>
                     <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 8px', borderRadius: 999, background: item.stock_quantity > 0 ? '#f0fdf4' : '#fef2f2', color: item.stock_quantity > 0 ? '#16a34a' : '#dc2626' }}>
                       {item.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
                     </span>

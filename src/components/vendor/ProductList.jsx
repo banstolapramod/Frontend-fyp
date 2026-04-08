@@ -3,6 +3,7 @@ import {
   Package, Search, Edit, Trash2, Plus, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { getUserData } from '../../utils/auth';
+import { formatPrice } from '../../utils/currency';
 import ImageWithFallback from '../ImageWithFallback';
 import './VendorStyles.css';
 
@@ -232,7 +233,7 @@ export default function ProductList({ onAddProduct, onEditProduct }) {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-lg font-bold text-gray-900 truncate flex-1 mr-2">{product.name}</h3>
-                  <span className="text-xl font-bold text-emerald-600">${product.price}</span>
+                  <span className="text-xl font-bold text-emerald-600">{formatPrice(product.price)}</span>
                 </div>
                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
                 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, ChevronDown, ChevronUp, MapPin, CreditCard, ShoppingBag } from 'lucide-react';
 import { getUserData } from '../utils/auth';
+import { formatPrice } from '../utils/currency';
 import { Header } from './LandingPageComponents/Header';
 import { Footer } from './LandingPageComponents/Footer';
 
@@ -146,7 +147,7 @@ export default function OrdersPage() {
                     {/* Total + chevron */}
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <p style={{ fontSize: 16, fontWeight: 800, color: '#111', margin: '0 0 4px' }}>
-                        ${parseFloat(order.total_price).toFixed(2)}
+                        {formatPrice(order.total_price)}
                       </p>
                       {isOpen ? <ChevronUp size={18} color="#9ca3af" /> : <ChevronDown size={18} color="#9ca3af" />}
                     </div>
@@ -182,8 +183,8 @@ export default function OrdersPage() {
                                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>{item.brand} · Qty: {item.quantity}</p>
                                   </div>
                                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111', margin: 0 }}>${parseFloat(item.subtotal).toFixed(2)}</p>
-                                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>${parseFloat(item.price_per_unit).toFixed(2)} each</p>
+                                    <p style={{ fontSize: 13, fontWeight: 700, color: '#111', margin: 0 }}>{formatPrice(item.subtotal)}</p>
+                                    <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{formatPrice(item.price_per_unit)} each</p>
                                   </div>
                                 </div>
                               ))}
@@ -223,7 +224,7 @@ export default function OrdersPage() {
                               ['Method', detail.payment_method === 'cod' ? 'Cash on Delivery' : 'Card Payment'],
                               ['Status', <StatusBadge key="ps" status={detail.payment_status} config={PAYMENT_CONFIG} />],
                               ['Order Status', <StatusBadge key="os" status={detail.order_status} config={STATUS_CONFIG} />],
-                              ['Total', `$${parseFloat(detail.total_price).toFixed(2)}`],
+                              ['Total', formatPrice(detail.total_price)],
                             ].map(([label, value]) => (
                               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 8 }}>
                                 <span style={{ color: '#9ca3af' }}>{label}</span>

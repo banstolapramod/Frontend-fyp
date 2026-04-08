@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle, Package, Shield, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatPrice } from '../utils/currency';
 import { getUserData } from '../utils/auth';
 import { Header } from './LandingPageComponents/Header';
 
@@ -118,7 +119,7 @@ export default function CheckoutPage() {
             ['State / ZIP', `${shipping.state} ${shipping.zip}`],
             ['Country', shipping.country],
             ['Payment', paymentMethod === 'cod' ? 'Cash on Delivery' : 'Card Payment'],
-            ['Total', `$${total.toFixed(2)}`],
+            ['Total', formatPrice(total)],
           ].map(([label, value]) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#6b7280', marginBottom: 6 }}>
               <span>{label}</span>
@@ -334,7 +335,7 @@ export default function CheckoutPage() {
                         <p style={{ fontSize: 14, fontWeight: 600, color: '#111', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
                         <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Qty: {item.quantity}</p>
                       </div>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#111', flexShrink: 0 }}>${(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#111', flexShrink: 0 }}>{formatPrice(parseFloat(item.price) * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
@@ -350,7 +351,7 @@ export default function CheckoutPage() {
               ) : (
                 <button onClick={handlePlaceOrder} disabled={placing} style={{ width: '100%', padding: '14px 0', background: placing ? '#6b7280' : '#16a34a', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: placing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   {placing ? 'Placing Order...' : (
-                    <><Shield size={16} /> Place Order — ${total.toFixed(2)}</>
+                    <><Shield size={16} /> Place Order — {formatPrice(total)}</>
                   )}
                 </button>
               )}
@@ -372,16 +373,16 @@ export default function CheckoutPage() {
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#111', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '1px 0 0' }}>×{item.quantity}</p>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>${(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>{formatPrice(parseFloat(item.price) * item.quantity)}</p>
                 </div>
               ))}
             </div>
 
             <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                ['Subtotal', `$${subtotal.toFixed(2)}`],
-                ['Shipping', shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`],
-                ['Tax (8%)', `$${tax.toFixed(2)}`],
+                ['Subtotal', formatPrice(subtotal)],
+                ['Shipping', shippingCost === 0 ? 'Free' : formatPrice(shippingCost)],
+                ['Tax (8%)', formatPrice(tax)],
               ].map(([label, value]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#6b7280' }}>
                   <span>{label}</span>
@@ -390,7 +391,7 @@ export default function CheckoutPage() {
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, color: '#111', paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatPrice(total)}</span>
               </div>
             </div>
           </div>

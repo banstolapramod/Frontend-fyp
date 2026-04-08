@@ -8,6 +8,7 @@ import {
 import VendorManagement from './AdminComponents/VendorManagement';
 import UserManagement from './AdminComponents/UserManagement';
 import CategoryManagement from './AdminComponents/CategoryManagement';
+import { formatPrice } from '../utils/currency';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -290,7 +291,7 @@ function DashboardContent({ stats }) {
                 <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">#{order.order_id.slice(0,8).toUpperCase()}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{order.full_name || '—'}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatPrice(order.total_price)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{new Date(order.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${STATUS_COLORS[order.order_status] || 'bg-gray-100 text-gray-700'}`}>
@@ -372,7 +373,7 @@ function ProductsContent() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">{p.brand}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{p.category || '—'}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-gray-900">${parseFloat(p.price).toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatPrice(p.price)}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{p.stock_quantity}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${p.stock_quantity > 10 ? 'bg-green-100 text-green-700' : p.stock_quantity > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
@@ -515,7 +516,7 @@ function OrdersContent() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-lg font-bold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</p>
+                    <p className="text-lg font-bold text-gray-900">{formatPrice(order.total_price)}</p>
                     <p className="text-xs text-gray-400">{isOpen ? '▲' : '▼'}</p>
                   </div>
                 </div>
@@ -540,7 +541,7 @@ function OrdersContent() {
                                   <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
                                   <p className="text-xs text-gray-400">{item.brand} · Qty: {item.quantity}</p>
                                 </div>
-                                <p className="text-sm font-bold text-gray-900">${parseFloat(item.subtotal).toFixed(2)}</p>
+                                <p className="text-sm font-bold text-gray-900">{formatPrice(item.subtotal)}</p>
                               </div>
                             ))}
                           </div>

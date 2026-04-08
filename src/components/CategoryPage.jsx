@@ -6,6 +6,7 @@ import { Footer } from './LandingPageComponents/Footer';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getUserData } from '../utils/auth';
+import { formatPrice } from '../utils/currency';
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
@@ -128,7 +129,7 @@ export default function CategoryPage() {
                     <p style={{ fontSize: 14, fontWeight: 700, color: '#111', margin: '0 0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.name}</p>
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px' }}>{product.category}</p>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>${parseFloat(product.price).toFixed(2)}</span>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{formatPrice(product.price)}</span>
                       <button
                         onClick={e => handleAddToCart(e, product.product_id)}
                         disabled={isAdding || product.stock_quantity === 0}

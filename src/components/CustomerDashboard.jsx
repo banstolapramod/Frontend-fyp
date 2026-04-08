@@ -5,10 +5,13 @@ import {
   LogOut, Menu, X, Search, Home, Bell, Package, 
   MapPin, CreditCard, Lock, Edit, Trash2, Eye
 } from 'lucide-react';
+import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
+import { formatPrice } from '../utils/currency';
 
-export default function CustomerDashboard() {
+export default function CustomerDashboard({ initialTab = 'dashboard' }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [userName, setUserName] = useState('Customer');
   const [userId, setUserId] = useState(null);
@@ -353,15 +356,30 @@ function ProfileContent({ userId, userName }) {
   );
 }
 
-// Orders Content Component
-function OrdersContent({ userId }) {
-  const [orders] = useState([
-    { id: 1001, product: 'Air Jordan 1 Retro High OG', price: 329, status: 'Delivered', date: '2024-02-15', tracking: 'TRK123456789', image: '👟' },
-    { id: 1002, product: 'Nike Dunk Low Retro', price: 189, status: 'Shipped', date: '2024-02-18', tracking: 'TRK987654321', image: '👟' },
-    { id: 1003, product: 'Adidas Yeezy Boost 350 V2', price: 279, status: 'Processing', date: '2024-02-20', tracking: 'Pending', image: '👟' },
-    { id: 1004, product: 'New Balance 550', price: 149, status: 'Delivered', date: '2024-02-10', tracking: 'TRK456789123', image: '👟' },
-    { id: 1005, product: 'Nike Air Max 97', price: 219, status: 'Cancelled', date: '2024-02-08', tracking: 'N/A', image: '👟' }
-  ]);
+// Orders Content Component — fetches real orders from API
+function OrdersContent() {
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:5001/api/orders', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.orders) setOrders(d.orders); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const STATUS_COLORS = {
+    pending:    'bg-amber-100 text-amber-700',
+    processing: 'bg-blue-100 text-blue-700',
+    shipped:    'bg-sky-100 text-sky-700',
+    delivered:  'bg-green-100 text-green-700',
+    cancelled:  'bg-red-100 text-red-700',
+  };
 
   return (
     <div className="space-y-6">
@@ -369,110 +387,105 @@ function OrdersContent({ userId }) {
         <h2 className="text-2xl font-bold text-gray-900">My Orders</h2>
         <p className="text-gray-500 mt-1">Track and manage your orders</p>
       </div>
-
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div key={order.id} className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-sm text-gray-500">Order #{order.id}</p>
-                <p className="text-sm text-gray-500">{order.date}</p>
-              </div>
-              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
-                order.status === 'Processing' ? 'bg-amber-100 text-amber-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {order.status}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center text-4xl">
-                  {order.image}
-                </div>
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" /></div>
+      ) : orders.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 p-12 text-center">
+          <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No orders yet. Start shopping!</p>
+          <button onClick={() => navigate('/')} className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">Browse Products</button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map(order => (
+            <div key={order.order_id} className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-semibold text-gray-900">{order.product}</p>
-                  <p className="text-sm text-gray-500">Tracking: {order.tracking}</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">${order.price}</p>
+                  <p className="text-sm font-mono font-bold text-gray-900">#{order.order_id.slice(0,8).toUpperCase()}</p>
+                  <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
+                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${STATUS_COLORS[order.order_status] || 'bg-gray-100 text-gray-700'}`}>
+                  {order.order_status}
+                </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  <Eye className="w-5 h-5" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{order.item_count} item{order.item_count !== '1' ? 's' : ''} · {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Card'}</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">{formatPrice(order.total_price)}</p>
+                </div>
+                <button onClick={() => navigate('/orders')} className="px-4 py-2 text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors text-sm font-medium">
+                  View Details
                 </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-// Favorites Content Component
-function FavoritesContent({ userId }) {
-  const [favorites, setFavorites] = useState([
-    { id: 1, name: 'Air Jordan 1 Retro', brand: 'Nike', price: 329, image: '👟', inStock: true },
-    { id: 2, name: 'Nike Dunk Low', brand: 'Nike', price: 189, image: '👟', inStock: true },
-    { id: 3, name: 'Yeezy Boost 350', brand: 'Adidas', price: 279, image: '👟', inStock: false },
-    { id: 4, name: 'New Balance 550', brand: 'New Balance', price: 149, image: '👟', inStock: true },
-    { id: 5, name: 'Air Max 97', brand: 'Nike', price: 219, image: '👟', inStock: true },
-    { id: 6, name: 'Chuck Taylor', brand: 'Converse', price: 95, image: '👟', inStock: true }
-  ]);
-
-  const handleRemove = (id) => {
-    setFavorites(favorites.filter(item => item.id !== id));
-  };
+// Favorites Content Component — uses real WishlistContext
+function FavoritesContent() {
+  const navigate = useNavigate();
+  const { items, loading, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Favorites</h2>
-          <p className="text-gray-500 mt-1">{favorites.length} items in your wishlist</p>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">My Favourites</h2>
+        <p className="text-gray-500 mt-1">{items.length} item{items.length !== 1 ? 's' : ''} saved</p>
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" /></div>
+      ) : items.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 p-12 text-center">
+          <Heart className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No favourites yet. Heart a product to save it here.</p>
+          <button onClick={() => navigate('/')} className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">Browse Products</button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {favorites.map((item) => (
-          <div key={item.id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="relative aspect-square bg-gray-100 flex items-center justify-center text-6xl">
-              {item.image}
-              {!item.inStock && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <span className="text-white font-bold">Out of Stock</span>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map(item => {
+            const imgSrc = item.image_url
+              ? (item.image_url.startsWith('http') ? item.image_url : `http://localhost:5001${item.image_url}`)
+              : null;
+            return (
+              <div key={item.product_id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
+                <div
+                  onClick={() => navigate(`/product/${item.product_id}`)}
+                  className="relative aspect-square bg-gray-100 flex items-center justify-center cursor-pointer overflow-hidden"
+                >
+                  {imgSrc ? <img src={imgSrc} alt={item.name} className="w-full h-full object-cover" /> : <Package className="w-12 h-12 text-gray-300" />}
+                  {item.stock_quantity === 0 && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">Out of Stock</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <div className="p-4">
-              <p className="text-sm text-gray-500">{item.brand}</p>
-              <h3 className="font-semibold text-gray-900 mb-2">{item.name}</h3>
-              <p className="text-lg font-bold text-gray-900 mb-3">${item.price}</p>
-              <div className="flex items-center space-x-2">
-                <button 
-                  disabled={!item.inStock}
-                  className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                    item.inStock 
-                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {item.inStock ? 'Add to Cart' : 'Out of Stock'}
-                </button>
-                <button 
-                  onClick={() => handleRemove(item.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                <div className="p-4">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">{item.brand}</p>
+                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{item.name}</h3>
+                  <p className="text-lg font-bold text-gray-900 mb-3">{formatPrice(item.price)}</p>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={async () => { const r = await addToCart(item.product_id, 1); if (!r.success) alert(`❌ ${r.error}`); }}
+                      disabled={item.stock_quantity === 0}
+                      className={`flex-1 py-2 rounded-lg font-medium transition-colors text-sm ${item.stock_quantity > 0 ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                    >
+                      {item.stock_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    </button>
+                    <button onClick={() => toggleWishlist(item.product_id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

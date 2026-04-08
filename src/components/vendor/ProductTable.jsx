@@ -4,6 +4,7 @@ import {
   AlertCircle, RefreshCw, Eye, Package, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { getUserData } from '../../utils/auth';
+import { formatPrice } from '../../utils/currency';
 import './VendorStyles.css';
 
 export default function ProductTable({ onAddProduct, onEditProduct }) {
@@ -380,7 +381,7 @@ export default function ProductTable({ onAddProduct, onEditProduct }) {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${parseFloat(product.price).toFixed(2)}
+                      {formatPrice(product.price)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className={`px-2 py-1 text-xs rounded-full ${

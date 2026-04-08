@@ -101,7 +101,7 @@ function App() {
           path="/dashboard" 
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <CustomerDashboard initialTab="dashboard" />
             </ProtectedRoute>
           } 
         />
@@ -109,15 +109,7 @@ function App() {
           path="/profile" 
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/orders" 
-          element={
-            <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <CustomerDashboard initialTab="profile" />
             </ProtectedRoute>
           } 
         />
@@ -125,7 +117,7 @@ function App() {
           path="/favorites" 
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <CustomerDashboard initialTab="favorites" />
             </ProtectedRoute>
           } 
         />
@@ -133,7 +125,7 @@ function App() {
           path="/settings" 
           element={
             <ProtectedRoute requiredRole="customer">
-              <CustomerDashboard />
+              <CustomerDashboard initialTab="settings" />
             </ProtectedRoute>
           } 
         />

@@ -6,6 +6,7 @@ import {
   BarChart3, ShoppingBag, Bell, Home, Store, Users, Grid, List
 } from 'lucide-react';
 import { getUserData, isVendor, clearUserData } from '../../utils/auth';
+import { formatPrice } from '../../utils/currency';
 import ProductList from './ProductList';
 import ProductTable from './ProductTable';
 import ProductModal from './ProductModal';
@@ -90,7 +91,7 @@ export default function VendorDashboard() {
   const stats = [
     { label: 'Total Products', value: '45', icon: Package, color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50', iconColor: 'text-emerald-600', change: '+5%', changeColor: 'text-green-600' },
     { label: 'Total Orders', value: '128', icon: ShoppingCart, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50', iconColor: 'text-blue-600', change: '+12%', changeColor: 'text-green-600' },
-    { label: 'Revenue', value: '$8,450', icon: DollarSign, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50', iconColor: 'text-purple-600', change: '+18%', changeColor: 'text-green-600' },
+    { label: 'Revenue', value: 'Rs. 8,45,000', icon: DollarSign, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50', iconColor: 'text-purple-600', change: '+18%', changeColor: 'text-green-600' },
     { label: 'Customers', value: '89', icon: Users, color: 'from-amber-500 to-amber-600', bgColor: 'bg-amber-50', iconColor: 'text-amber-600', change: '+8%', changeColor: 'text-green-600' }
   ];
 
@@ -350,7 +351,7 @@ function DashboardContent() {
                 <tr key={o.order_id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-mono font-bold text-gray-900">#{o.order_id.slice(0,8).toUpperCase()}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{o.customer_name || o.full_name || '—'}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">${parseFloat(o.total_price).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatPrice(o.total_price)}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{new Date(o.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4">
                     <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${STATUS_COLORS[o.order_status] || 'bg-gray-100 text-gray-700'}`}>{o.order_status}</span>
@@ -588,7 +589,7 @@ function OrdersContent() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-lg font-bold text-gray-900">${parseFloat(order.total_price).toFixed(2)}</p>
+                    <p className="text-lg font-bold text-gray-900">{formatPrice(order.total_price)}</p>
                     <p className="text-xs text-gray-400">{isOpen ? '▲ Hide' : '▼ Details'}</p>
                   </div>
                 </div>
@@ -617,8 +618,8 @@ function OrdersContent() {
                                   <p className="text-xs text-gray-400">{item.brand} · Qty: {item.quantity}</p>
                                 </div>
                                 <div className="text-right flex-shrink-0">
-                                  <p className="text-sm font-bold text-gray-900">${parseFloat(item.subtotal).toFixed(2)}</p>
-                                  <p className="text-xs text-gray-400">${parseFloat(item.price_per_unit).toFixed(2)} each</p>
+                                  <p className="text-sm font-bold text-gray-900">{formatPrice(item.subtotal)}</p>
+                                  <p className="text-xs text-gray-400">{formatPrice(item.price_per_unit)} each</p>
                                 </div>
                               </div>
                             ))}
@@ -781,7 +782,7 @@ function CustomersContent() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-bold text-gray-900">{c.total_orders} orders</p>
-                    <p className="text-xs text-emerald-600 font-semibold">${parseFloat(c.total_spent || 0).toFixed(2)}</p>
+                    <p className="text-xs text-emerald-600 font-semibold">{formatPrice(c.total_spent || 0)}</p>
                   </div>
                 </div>
                 <div className="flex gap-4 mt-2 text-xs text-gray-400">
@@ -812,7 +813,7 @@ function CustomersContent() {
                 <div className="flex gap-4">
                   {[
                     ['Orders', selected.total_orders],
-                    ['Spent', `$${parseFloat(selected.total_spent || 0).toFixed(2)}`],
+                    ['Spent', formatPrice(selected.total_spent || 0)],
                     ['Since', formatDate(selected.member_since)],
                   ].map(([label, value]) => (
                     <div key={label} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 14px', textAlign: 'center' }}>
@@ -841,7 +842,7 @@ function CustomersContent() {
                             #{order.order_id.slice(0, 8).toUpperCase()}
                           </span>
                           <span style={{ fontSize: 15, fontWeight: 800, color: '#111' }}>
-                            ${parseFloat(order.total_price).toFixed(2)}
+                          {formatPrice(order.total_price)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package, Truck, Shield } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { formatPrice } from '../utils/currency';
 import { Header } from './LandingPageComponents/Header';
 import { Footer } from './LandingPageComponents/Footer';
 
@@ -142,11 +143,11 @@ export default function CartPage() {
                       {/* Price */}
                       <div style={{ textAlign: 'right' }}>
                         <p style={{ fontSize: 16, fontWeight: 700, color: '#111', margin: 0 }}>
-                          ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                          {formatPrice(parseFloat(item.price) * item.quantity)}
                         </p>
                         {item.quantity > 1 && (
                           <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>
-                            ${parseFloat(item.price).toFixed(2)} each
+                            {formatPrice(item.price)} each
                           </p>
                         )}
                         {item.quantity >= item.stock_quantity && (
@@ -171,27 +172,27 @@ export default function CartPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#6b7280' }}>
                     <span>Subtotal ({items.length} items)</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#6b7280' }}>
                     <span>Shipping</span>
                     <span style={{ color: shipping === 0 ? '#16a34a' : '#6b7280', fontWeight: shipping === 0 ? 600 : 400 }}>
-                      {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? 'Free' : formatPrice(shipping)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: '#6b7280' }}>
                     <span>Tax (8%)</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{formatPrice(tax)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 700, color: '#111', paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
                 </div>
 
                 {subtotal < 100 && (
                   <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#15803d' }}>
-                    Add ${(100 - subtotal).toFixed(2)} more for free shipping!
+                    Add {formatPrice(100 - subtotal)} more for free shipping!
                   </div>
                 )}
 

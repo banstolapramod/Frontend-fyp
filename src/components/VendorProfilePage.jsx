@@ -4,6 +4,7 @@ import { ArrowLeft, Store, Package, ShoppingCart, Star, Search } from 'lucide-re
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getUserData } from '../utils/auth';
+import { formatPrice } from '../utils/currency';
 import { Header } from './LandingPageComponents/Header';
 import { Footer } from './LandingPageComponents/Footer';
 
@@ -191,7 +192,7 @@ export default function VendorProfilePage() {
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 12px' }}>{product.category}</p>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>${parseFloat(product.price).toFixed(2)}</span>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{formatPrice(product.price)}</span>
                       <button
                         onClick={e => handleAddToCart(e, product.product_id)}
                         disabled={isAdding || product.stock_quantity === 0}

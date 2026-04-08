@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart, ArrowLeft, Package, Star, Store, Shield, Truck } from 'lucide-react';
 import { getUserData } from '../utils/auth';
+import { formatPrice } from '../utils/currency';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -164,7 +165,7 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <p style={{ fontSize: 32, fontWeight: 800, color: '#111', marginBottom: 8 }}>
-                ${parseFloat(product.price).toFixed(2)}
+                {formatPrice(product.price)}
               </p>
 
               {/* Stock badge */}
