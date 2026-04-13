@@ -88,12 +88,6 @@ export default function VendorDashboard() {
     // ProductList component will automatically refresh its data
   };
 
-  const stats = [
-    { label: 'Total Products', value: '45', icon: Package, color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50', iconColor: 'text-emerald-600', change: '+5%', changeColor: 'text-green-600' },
-    { label: 'Total Orders', value: '128', icon: ShoppingCart, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50', iconColor: 'text-blue-600', change: '+12%', changeColor: 'text-green-600' },
-    { label: 'Revenue', value: 'Rs. 8,45,000', icon: DollarSign, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50', iconColor: 'text-purple-600', change: '+18%', changeColor: 'text-green-600' },
-    { label: 'Customers', value: '89', icon: Users, color: 'from-amber-500 to-amber-600', bgColor: 'bg-amber-50', iconColor: 'text-amber-600', change: '+8%', changeColor: 'text-green-600' }
-  ];
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -138,7 +132,7 @@ export default function VendorDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50 relative">
       {/* Left Sidebar */}
-      <aside className={`bg-gray-900 text-white transition-all duration-300 flex-shrink-0 flex flex-col ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside className={`bg-gray-900 text-white transition-all duration-300 flex-shrink-0 flex flex-col h-screen sticky top-0 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="p-6 border-b border-gray-800">
@@ -313,8 +307,8 @@ function DashboardContent() {
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8 text-white">
+    <div className="space-y-8 px-1">
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8">
         <h2 className="text-3xl font-bold mb-2">Welcome to your store! 🏪</h2>
         <p className="text-emerald-100">Manage your products, track orders, and grow your business.</p>
       </div>
@@ -433,6 +427,7 @@ function OrdersContent() {
   const [expandedId, setExpandedId] = useState(null);
   const [orderDetails, setOrderDetails] = useState({});
   const [updatingId, setUpdatingId] = useState(null);
+  const [pendingChange, setPendingChange] = useState(null); // { orderId, status, label }
   const [filterStatus, setFilterStatus] = useState('all');
 
   const STATUS_CONFIG = {
@@ -651,23 +646,50 @@ function OrdersContent() {
                           {/* Status actions */}
                           <div className="bg-gray-50 rounded-xl p-4">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Update Order Status</p>
-                            <div className="grid grid-cols-2 gap-2">
-                              {[
-                                { status: 'processing', label: 'Processing', color: '#1e40af', bg: '#dbeafe' },
-                                { status: 'shipped',    label: 'Shipped',    color: '#0369a1', bg: '#e0f2fe' },
-                                { status: 'delivered',  label: 'Delivered',  color: '#15803d', bg: '#dcfce7' },
-                                { status: 'cancelled',  label: 'Cancelled',  color: '#b91c1c', bg: '#fee2e2' },
-                              ].map(({ status, label, color, bg }) => (
-                                <button
-                                  key={status}
-                                  onClick={() => updateStatus(order.order_id, status)}
-                                  disabled={isUpdating || detail.order_status === status}
-                                  style={{ padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: detail.order_status === status ? 'default' : 'pointer', background: detail.order_status === status ? bg : '#fff', color: detail.order_status === status ? color : '#374151', border: `1px solid ${detail.order_status === status ? color : '#e5e7eb'}`, opacity: isUpdating ? 0.6 : 1 }}
-                                >
-                                  {isUpdating === order.order_id ? '...' : label}
-                                </button>
-                              ))}
-                            </div>
+
+                            {/* Confirmation prompt */}
+                            {pendingChange?.orderId === order.order_id ? (
+                              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '12px 14px' }}>
+                                <p className="text-xs text-gray-700 mb-3">
+                                  Change status to <strong>{pendingChange.label}</strong>?
+                                </p>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      updateStatus(pendingChange.orderId, pendingChange.status);
+                                      setPendingChange(null);
+                                    }}
+                                    style={{ flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 12, fontWeight: 700, background: '#111', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    onClick={() => setPendingChange(null)}
+                                    style={{ flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#f3f4f6', color: '#374151', border: 'none', cursor: 'pointer' }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { status: 'processing', label: 'Processing', color: '#1e40af', bg: '#dbeafe' },
+                                  { status: 'shipped',    label: 'Shipped',    color: '#0369a1', bg: '#e0f2fe' },
+                                  { status: 'delivered',  label: 'Delivered',  color: '#15803d', bg: '#dcfce7' },
+                                  { status: 'cancelled',  label: 'Cancelled',  color: '#b91c1c', bg: '#fee2e2' },
+                                ].map(({ status, label, color, bg }) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => setPendingChange({ orderId: order.order_id, status, label })}
+                                    disabled={isUpdating || detail.order_status === status}
+                                    style={{ padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: detail.order_status === status ? 'default' : 'pointer', background: detail.order_status === status ? bg : '#fff', color: detail.order_status === status ? color : '#374151', border: `1px solid ${detail.order_status === status ? color : '#e5e7eb'}`, opacity: isUpdating ? 0.6 : 1 }}
+                                  >
+                                    {isUpdating === order.order_id ? '...' : label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           {/* Payment status — read only for vendor, managed by admin */}

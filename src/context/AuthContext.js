@@ -271,13 +271,9 @@ export function AuthProvider({ children }) {
 
   const getRedirectPath = (user) => {
     switch (user?.role) {
-      case 'admin':
-        return '/admin-panel';
-      case 'vendor':
-        return '/vendor-dashboard';
-      case 'customer':
-      default:
-        return '/main';
+      case 'admin':  return '/admin-panel';
+      case 'vendor': return '/vendor-dashboard';
+      default:       return '/';
     }
   };
 

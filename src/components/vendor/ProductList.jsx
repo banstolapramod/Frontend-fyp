@@ -217,77 +217,61 @@ export default function ProductList({ onAddProduct, onEditProduct }) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
-            <div key={product.product_id || product.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
-              <ImageWithFallback
-                src={product.image_url ? 
-                  (product.image_url.startsWith('http') ? 
-                    product.image_url : 
-                    `http://localhost:5001${product.image_url}`) : 
-                  null}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-                fallbackText="Product Image"
-              />
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-bold text-gray-900 truncate flex-1 mr-2">{product.name}</h3>
-                  <span className="text-xl font-bold text-emerald-600">{formatPrice(product.price)}</span>
+            <div key={product.product_id || product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
+              {/* Image — fixed square aspect ratio */}
+              <div className="relative w-full" style={{ paddingTop: '75%' }}>
+                <div className="absolute inset-0">
+                  <ImageWithFallback
+                    src={product.image_url ? 
+                      (product.image_url.startsWith('http') ? 
+                        product.image_url : 
+                        `http://localhost:5001${product.image_url}`) : 
+                      null}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    fallbackText="No Image"
+                  />
                 </div>
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                
-                <div className="flex items-center justify-between mb-3">
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">{product.brand}</span>
-                  <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full">
-                    {product.category_name || product.category || 'No Category'}
-                  </span>
-                </div>
+              </div>
 
-                {product.size && (
-                  <div className="mb-3">
-                    <span className="text-xs text-gray-500">Size: </span>
-                    <span className="text-xs font-medium text-gray-700">{product.size}</span>
-                    {product.color && (
-                      <>
-                        <span className="text-xs text-gray-500 ml-3">Color: </span>
-                        <span className="text-xs font-medium text-gray-700">{product.color}</span>
-                      </>
-                    )}
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-600">Stock: {product.stock_quantity}</span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
+              <div className="p-3">
+                <div className="flex items-start justify-between gap-1 mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900 truncate flex-1">{product.name}</h3>
+                </div>
+                <p className="text-xs text-gray-500 mb-2 truncate">{product.brand} · {product.category_name || product.category || '—'}</p>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold text-emerald-600">{formatPrice(product.price)}</span>
+                  <span className={`px-1.5 py-0.5 text-xs rounded-full ${
                     product.stock_quantity > 5 
                       ? 'bg-green-100 text-green-700' 
                       : product.stock_quantity > 0 
                         ? 'bg-amber-100 text-amber-700' 
                         : 'bg-red-100 text-red-700'
                   }`}>
-                    {product.stock_quantity > 5 ? 'In Stock' : product.stock_quantity > 0 ? 'Low Stock' : 'Out of Stock'}
+                    {product.stock_quantity > 5 ? 'In Stock' : product.stock_quantity > 0 ? `${product.stock_quantity} left` : 'Out'}
                   </span>
                 </div>
-                
-                <div className="flex items-center space-x-2">
+
+                <div className="flex items-center gap-1">
                   <button 
                     onClick={() => onEditProduct(product)}
-                    className="flex-1 px-3 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center justify-center"
+                    className="flex-1 px-2 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs font-medium flex items-center justify-center gap-1"
                   >
-                    <Edit className="w-4 h-4 mr-1" />
+                    <Edit className="w-3 h-3" />
                     Edit
                   </button>
                   <button 
                     onClick={() => handleDeleteProduct(product.product_id || product.id, product.name)}
                     disabled={deletingProduct === (product.product_id || product.id)}
-                    className="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Delete Product"
+                    className="px-2 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                   >
                     {deletingProduct === (product.product_id || product.id) ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-3 h-3 animate-spin" />
                     ) : (
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     )}
                   </button>
                 </div>

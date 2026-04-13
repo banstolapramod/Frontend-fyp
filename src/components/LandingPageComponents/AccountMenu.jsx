@@ -105,9 +105,9 @@ export function AccountMenu({ isOpen, onClose }) {
   };
 
   const getDashboardPath = () => {
-    if (user?.role === 'admin') return "/admin-dashboard";
-    if (user?.role === 'vendor') return "/vendor-dashboard";
-    return "/profile";
+    if (user?.role === 'admin') return '/admin-panel';
+    if (user?.role === 'vendor') return '/vendor-dashboard';
+    return '/dashboard';
   };
 
   return (
@@ -213,7 +213,7 @@ export function AccountMenu({ isOpen, onClose }) {
 
               <div className="space-y-2">
                 <button
-                  onClick={() => handleNavigate("/login")}
+                  onClick={() => handleNavigate(isLoggedIn ? getDashboardPath() : "/login")}
                   className="w-full px-3 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors duration-150 text-sm font-medium"
                 >
                   Sign In

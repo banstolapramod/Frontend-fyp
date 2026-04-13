@@ -79,19 +79,13 @@ export default function AdminPanel() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'vendors', label: 'Vendors', icon: Store },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'categories', label: 'Categories', icon: Filter },
-    { id: 'orders', label: 'Orders', icon: ShoppingBag },
-    { id: 'reviews', label: 'Reviews', icon: Star },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'vendors', label: 'Vendors', icon: Store }
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Left Sidebar */}
-      <aside className={`bg-gray-900 text-white transition-all duration-300 flex-shrink-0 flex flex-col ${sidebarOpen ? 'w-64' : 'w-20'}`}>
+      <aside className={`bg-gray-900 text-white transition-all duration-300 flex-shrink-0 flex flex-col h-screen sticky top-0 ${sidebarOpen ? 'w-64' : 'w-20'}`}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="p-6 border-b border-gray-800">
@@ -168,8 +162,8 @@ export default function AdminPanel() {
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
 
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -199,14 +193,8 @@ export default function AdminPanel() {
 
         {/* Page Content */}
         <main className="flex-1 p-8 overflow-auto">
-          {activeTab === 'dashboard' && <DashboardContent stats={stats} />}
-          {activeTab === 'users' && <UserManagement />}
+          {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'vendors' && <VendorManagement />}
-          {activeTab === 'products' && <ProductsContent />}
-          {activeTab === 'categories' && <CategoryManagement />}
-          {activeTab === 'orders' && <OrdersContent />}
-          {activeTab === 'reviews' && <ReviewsContent />}
-          {activeTab === 'settings' && <SettingsContent />}
         </main>
       </div>
     </div>
@@ -214,31 +202,20 @@ export default function AdminPanel() {
 }
 
 // Dashboard Content Component
-function DashboardContent({ stats }) {
-  const [realStats, setRealStats] = useState(null);
-  const [recentOrders, setRecentOrders] = useState([]);
+function DashboardContent() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-
-    fetch('http://localhost:5001/api/admin/dashboard-stats', { headers })
-      .then(r => r.json())
-      .then(d => { if (d.users) setRealStats(d); })
-      .catch(console.error);
-
-    fetch('http://localhost:5001/api/orders', { headers })
-      .then(r => r.json())
-      .then(d => { if (d.orders) setRecentOrders(d.orders.slice(0, 5)); })
-      .catch(console.error);
+    const headers = { 'Authorization': `Bearer ${token}` };
+    Promise.all([
+      fetch('http://localhost:5001/api/admin/dashboard-stats', { headers }).then(r => r.json()),
+      fetch('http://localhost:5001/api/orders/admin/all', { headers }).then(r => r.json()),
+    ]).then(([s, o]) => {
+      if (s.users || s.vendors) setStats(s);
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
-
-  const displayStats = [
-    { label: 'Total Users',    value: realStats ? realStats.users.total    : stats[0].value, icon: stats[0].icon, bgColor: stats[0].bgColor, iconColor: stats[0].iconColor },
-    { label: 'Total Vendors',  value: realStats ? realStats.vendors.total  : stats[1].value, icon: stats[1].icon, bgColor: stats[1].bgColor, iconColor: stats[1].iconColor },
-    { label: 'Pending Vendors',value: realStats ? realStats.vendors.pending: '—',            icon: stats[2].icon, bgColor: stats[2].bgColor, iconColor: stats[2].iconColor },
-    { label: 'Approved Vendors',value: realStats ? realStats.vendors.approved: '—',          icon: stats[3].icon, bgColor: stats[3].bgColor, iconColor: stats[3].iconColor },
-  ];
 
   const STATUS_COLORS = {
     pending:    'bg-amber-100 text-amber-700',
@@ -248,62 +225,42 @@ function DashboardContent({ stats }) {
     cancelled:  'bg-red-100 text-red-700',
   };
 
+  const cards = [
+    { label: 'Total Users',      value: stats?.users?.total ?? '—',              icon: Users,       bg: 'bg-blue-50',    color: 'text-blue-600',    sub: `${stats?.users?.customers ?? 0} customers` },
+    { label: 'Total Products',   value: stats?.products?.total ?? '—',           icon: Package,     bg: 'bg-emerald-50', color: 'text-emerald-600', sub: `${stats?.products?.totalStock ?? 0} in stock` },
+    { label: 'Total Orders',     value: stats?.orders?.total ?? '—',             icon: ShoppingBag, bg: 'bg-purple-50',  color: 'text-purple-600',  sub: `${stats?.orders?.pending ?? 0} pending` },
+    { label: 'Total Revenue',    value: stats?.orders ? formatPrice(stats?.orders.revenue) : '—', icon: DollarSign, bg: 'bg-amber-50', color: 'text-amber-600', sub: `${stats?.orders?.delivered ?? 0} delivered` },
+    { label: 'Active Vendors',   value: stats?.vendors?.approved ?? '—',         icon: Store,       bg: 'bg-teal-50',    color: 'text-teal-600',    sub: `${stats?.vendors?.pending ?? 0} pending approval` },
+    { label: 'New Users (30d)',  value: stats?.users?.newUsers30Days ?? '—',     icon: Users,       bg: 'bg-pink-50',    color: 'text-pink-600',    sub: 'last 30 days' },
+  ];
+
   return (
-    <div className="space-y-8">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+    <div className="space-y-8 px-2">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl px-1">
         <h2 className="text-3xl font-bold mb-2">Welcome back! 👋</h2>
         <p className="text-blue-100">Here's what's happening with your store today.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {displayStats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.bgColor} w-14 h-14 rounded-xl flex items-center justify-center`}>
-                <stat.icon className={`w-7 h-7 ${stat.iconColor}`} />
+      {loading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 animate-pulse h-28" />
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          {cards.map((c, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+              <div className={`${c.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-4`}>
+                <c.icon className={`w-6 h-6 ${c.color}`} />
               </div>
+              <p className="text-gray-500 text-sm font-medium mb-1">{c.label}</p>
+              <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+              <p className="text-xs text-gray-400 mt-1">{c.sub}</p>
             </div>
-            <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.label}</h3>
-            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900">Recent Orders</h3>
+          ))}
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Order ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Customer</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {recentOrders.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">No orders yet</td></tr>
-              ) : recentOrders.map(order => (
-                <tr key={order.order_id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">#{order.order_id.slice(0,8).toUpperCase()}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{order.full_name || '—'}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatPrice(order.total_price)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{new Date(order.created_at).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-full ${STATUS_COLORS[order.order_status] || 'bg-gray-100 text-gray-700'}`}>
-                      {order.order_status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

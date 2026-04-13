@@ -6,7 +6,6 @@ import { LandingPageComponents } from "./components/LandingPage";
 // Pages
 import Login from "./components/LoginPage";
 import Register from "./components/RegisterPage";
-import MainPage from "./components/MainPage";
 import NewReleasesPage from "./components/NewReleasesPage";
 import MenPage from "./components/MenPage";
 import WomenPage from "./components/WomenPage";
@@ -47,18 +46,6 @@ function App() {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/vendor/:vendorId" element={<VendorProfilePage />} />
         <Route path="/category/:categoryId" element={<CategoryPage />} />
-        
-        {/* Protected Routes */}
-        
-        {/* Customer Main Page */}
-        <Route 
-          path="/main" 
-          element={
-            <ProtectedRoute requiredRole="customer">
-              <MainPage />
-            </ProtectedRoute>
-          } 
-        />
         
         {/* Admin Routes */}
         <Route 
