@@ -300,17 +300,17 @@ export default function ProductModal({ product, onClose, onSave }) {
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Price ($) *
+                  Price (Rs.) *
                 </label>
                 <input
                   type="number"
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
-                  step="0.01"
+                  step="1"
                   min="0"
                   className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 font-medium"
-                  placeholder="0.00"
+                  placeholder="e.g. 3500"
                   required
                 />
               </div>

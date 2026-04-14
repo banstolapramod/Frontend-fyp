@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Package, ShoppingCart, DollarSign, TrendingUp, 
   Settings, LogOut, Menu, Search, Plus,
-  BarChart3, ShoppingBag, Bell, Home, Store, Users, Grid, List
+  BarChart3, ShoppingBag, Home, Store, Users, Grid, List
 } from 'lucide-react';
 import { getUserData, isVendor, clearUserData } from '../../utils/auth';
 import { formatPrice } from '../../utils/currency';
@@ -228,11 +228,6 @@ export default function VendorDashboard() {
                 title="Go to Home"
               >
                 <Home className="w-5 h-5 text-gray-600" />
-              </button>
-
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
             </div>
           </div>

@@ -39,7 +39,7 @@ export function Hero() {
             >
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium tracking-wide group-hover:text-white transition-colors">
-                ✨ New Arrivals 2024 Collection
+                ✨ New Arrivals 2026 Collection
               </span>
               <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -128,7 +128,7 @@ export function Hero() {
               {/* Floating Price Tag */}
               <div className="absolute -top-4 -right-4 bg-gradient-to-r from-accent-500 to-accent-600 text-white px-6 py-3 rounded-2xl shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
                 <div className="text-sm font-medium">Starting from</div>
-                <div className="text-xl font-bold">$149</div>
+                <div className="text-xl font-bold">RS 10000</div>
               </div>
               
               {/* Quality Badge */}

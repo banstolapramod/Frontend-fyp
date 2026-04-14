@@ -79,7 +79,8 @@ export default function AdminPanel() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'vendors', label: 'Vendors', icon: Store }
+    { id: 'vendors', label: 'Vendors', icon: Store },
+    { id: 'users', label: 'Users', icon: Users }
   ];
 
   return (
@@ -195,6 +196,7 @@ export default function AdminPanel() {
         <main className="flex-1 p-8 overflow-auto">
           {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'vendors' && <VendorManagement />}
+          {activeTab === 'users' && <UserManagement />}
         </main>
       </div>
     </div>
