@@ -10,6 +10,7 @@ import NewReleasesPage from "./components/NewReleasesPage";
 import MenPage from "./components/MenPage";
 import WomenPage from "./components/WomenPage";
 import BrandsPage from "./components/BrandsPage";
+import BrandPage from "./components/BrandPage";
 import SalePage from "./components/SalePage";
 import AdminPanel from "./components/AdminPanel";
 import VendorDashboard from "./components/vendor/VendorDashboard";
@@ -24,6 +25,7 @@ import CheckoutPage from "./components/CheckoutPage";
 import OrdersPage from "./components/OrdersPage";
 import VendorProfilePage from "./components/VendorProfilePage";
 import CategoryPage from "./components/CategoryPage";
+import PaymentVerifyPage from "./components/PaymentVerifyPage";
 // import CartPage from "./components/CartPage";
 
 function App() {
@@ -38,6 +40,7 @@ function App() {
         <Route path="/men" element={<MenPage />} />
         <Route path="/women" element={<WomenPage />} />
         <Route path="/brands" element={<BrandsPage />} />
+        <Route path="/brand/:brandName" element={<BrandPage />} />
         <Route path="/sale" element={<SalePage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
@@ -46,6 +49,7 @@ function App() {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/vendor/:vendorId" element={<VendorProfilePage />} />
         <Route path="/category/:categoryId" element={<CategoryPage />} />
+        <Route path="/payment/verify" element={<PaymentVerifyPage />} />
         
         {/* Admin Routes */}
         <Route 

@@ -7,10 +7,6 @@ export function Hero() {
     navigate('/new-releases');
   };
 
-  const handleShopNow = () => {
-    navigate('/new-releases');
-  };
-
   const handleViewCollection = () => {
     navigate('/brands');
   };
@@ -80,18 +76,6 @@ export function Hero() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button 
-                onClick={handleShopNow}
-                className="group relative px-8 py-4 bg-white text-black font-semibold rounded-2xl hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl hover:shadow-white/20 hover:-translate-y-1"
-              >
-                <span className="relative z-10 flex items-center gap-3">
-                  Shop Premium Collection
-                  <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </button>
-              
               <button 
                 onClick={handleViewCollection}
                 className="group px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-2xl hover:bg-white/10 hover:border-white/50 transition-all duration-300 backdrop-blur-sm"

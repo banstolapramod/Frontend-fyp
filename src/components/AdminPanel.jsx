@@ -80,7 +80,8 @@ export default function AdminPanel() {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'vendors', label: 'Vendors', icon: Store },
-    { id: 'users', label: 'Users', icon: Users }
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'payouts', label: 'Payouts', icon: DollarSign }
   ];
 
   return (
@@ -197,6 +198,7 @@ export default function AdminPanel() {
           {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'vendors' && <VendorManagement />}
           {activeTab === 'users' && <UserManagement />}
+          {activeTab === 'payouts' && <PayoutsContent />}
         </main>
       </div>
     </div>
@@ -812,6 +814,238 @@ function SettingsContent() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Payouts Content Component
+function PayoutsContent() {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedVendor, setSelectedVendor] = useState(null);
+  const [vendorDetail, setVendorDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [payAmount, setPayAmount] = useState('');
+  const [payNote, setPayNote] = useState('');
+  const [paying, setPaying] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const token = localStorage.getItem('token');
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/payouts/admin/summary', { headers })
+      .then(r => r.json())
+      .then(d => { if (d.success) setSummary(d); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const openVendor = async (vendor) => {
+    setSelectedVendor(vendor);
+    setVendorDetail(null);
+    setMsg('');
+    setPayAmount('');
+    setPayNote('');
+    setLoadingDetail(true);
+    try {
+      const res = await fetch(`http://localhost:5001/api/payouts/admin/vendor/${vendor.vendor_id}`, { headers });
+      const d = await res.json();
+      if (d.success) setVendorDetail(d);
+    } catch (e) { console.error(e); }
+    finally { setLoadingDetail(false); }
+  };
+
+  const handlePay = async () => {
+    if (!payAmount || parseFloat(payAmount) <= 0) { setMsg('❌ Enter a valid amount'); return; }
+    setPaying(true); setMsg('');
+    try {
+      const res = await fetch(`http://localhost:5001/api/payouts/admin/pay/${selectedVendor.vendor_id}`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ amount: parseFloat(payAmount), note: payNote })
+      });
+      const d = await res.json();
+      if (d.success) {
+        setMsg(`✅ ${d.message}`);
+        setPayAmount(''); setPayNote('');
+        // Refresh both
+        openVendor(selectedVendor);
+        fetch('http://localhost:5001/api/payouts/admin/summary', { headers })
+          .then(r => r.json()).then(d => { if (d.success) setSummary(d); });
+      } else setMsg(`❌ ${d.error}`);
+    } catch (e) { setMsg(`❌ ${e.message}`); }
+    finally { setPaying(false); }
+  };
+
+  const fmt = (n) => 'Rs. ' + (parseFloat(n || 0) * 100).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Vendor Payouts</h1>
+        <p className="text-gray-500 mt-1">Track earnings and record manual payouts to vendors</p>
+      </div>
+
+      {/* Platform summary */}
+      {summary && (
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Platform Commission (10%)', value: fmt(summary.platform_revenue), bg: 'bg-purple-50', color: 'text-purple-600' },
+            { label: 'Total Pending Payouts', value: fmt(summary.total_pending_payouts), bg: 'bg-amber-50', color: 'text-amber-600' },
+            { label: 'Active Vendors', value: summary.vendors?.length || 0, bg: 'bg-emerald-50', color: 'text-emerald-600' },
+          ].map(({ label, value, bg, color }) => (
+            <div key={label} className={`${bg} rounded-2xl p-5 border border-gray-100`}>
+              <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
+              <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: selectedVendor ? '1fr 1.4fr' : '1fr', gap: 20 }}>
+
+        {/* Vendor list */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-bold text-gray-700">Vendors</p>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {summary?.vendors?.length === 0 && (
+              <p className="text-center text-gray-400 py-8 text-sm">No approved vendors yet</p>
+            )}
+            {summary?.vendors?.map(v => (
+              <div
+                key={v.vendor_id}
+                onClick={() => openVendor(v)}
+                className={`flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedVendor?.vendor_id === v.vendor_id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {v.vendor_name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{v.vendor_name}</p>
+                  <p className="text-xs text-gray-400 truncate">{v.vendor_email}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-gray-900">{fmt(v.net_earnings)}</p>
+                  <p className={`text-xs font-semibold ${v.pending_payout > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                    {v.pending_payout > 0 ? `${fmt(v.pending_payout)} owed` : 'Settled'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Vendor detail panel */}
+        {selectedVendor && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Header */}
+            <div style={{ background: 'linear-gradient(135deg,#1e3a5f,#1e40af)', padding: '20px 24px' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-xl">
+                    {selectedVendor.vendor_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-base">{selectedVendor.vendor_name}</p>
+                    <p className="text-blue-200 text-xs">{selectedVendor.vendor_email}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedVendor(null)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 10px', color: '#fff', cursor: 'pointer', fontSize: 13 }}>✕</button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: 520 }}>
+              {loadingDetail ? (
+                <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>
+              ) : vendorDetail ? (
+                <>
+                  {/* Earnings breakdown */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Earnings Breakdown</p>
+                    {[
+                      ['Gross Revenue (delivered orders)', fmt(vendorDetail.earnings.gross_revenue), 'text-gray-900'],
+                      [`Platform Commission (${(vendorDetail.earnings.commission_rate * 100).toFixed(0)}%)`, `- ${fmt(vendorDetail.earnings.commission_amount)}`, 'text-red-600'],
+                      ['Net Earnings', fmt(vendorDetail.earnings.net_earnings), 'text-emerald-700 font-bold'],
+                      ['Total Paid Out', `- ${fmt(vendorDetail.earnings.total_paid)}`, 'text-blue-600'],
+                      ['Pending Payout', fmt(vendorDetail.earnings.pending_payout), vendorDetail.earnings.pending_payout > 0 ? 'text-amber-600 font-bold' : 'text-green-600 font-bold'],
+                    ].map(([label, value, cls]) => (
+                      <div key={label} className="flex justify-between text-sm py-1.5 border-b border-gray-100 last:border-0">
+                        <span className="text-gray-500">{label}</span>
+                        <span className={cls}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Record payout */}
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">Record Manual Payout</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1 block">Amount ($)</label>
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={payAmount}
+                          onChange={e => setPayAmount(e.target.value)}
+                          placeholder={`Max: ${fmt(vendorDetail.earnings.pending_payout)}`}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1 block">Note (optional)</label>
+                        <input
+                          type="text"
+                          value={payNote}
+                          onChange={e => setPayNote(e.target.value)}
+                          placeholder="e.g. Bank transfer ref #12345"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      {msg && <p className="text-sm font-medium">{msg}</p>}
+                      <button
+                        onClick={handlePay}
+                        disabled={paying || vendorDetail.earnings.pending_payout <= 0}
+                        className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {paying ? 'Recording...' : vendorDetail.earnings.pending_payout <= 0 ? 'No Pending Payout' : 'Mark as Paid'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payout history */}
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Payout History</p>
+                    {vendorDetail.payouts.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-4">No payouts recorded yet</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {vendorDetail.payouts.map(p => (
+                          <div key={p.payout_id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{fmt(p.amount)}</p>
+                              <p className="text-xs text-gray-400">{fmtDate(p.created_at)}{p.note ? ` · ${p.note}` : ''}</p>
+                            </div>
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">Paid</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

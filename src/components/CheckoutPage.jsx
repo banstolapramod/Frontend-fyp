@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, CreditCard, Truck, CheckCircle, Package, Shield, Lock } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/currency';
 import { getUserData } from '../utils/auth';
 import { Header } from './LandingPageComponents/Header';
+import StripePaymentForm from './StripePaymentForm';
 
 const STEPS = ['Shipping', 'Payment', 'Review'];
+
+// Stripe instance — loaded once
+let stripePromise = null;
+const getStripe = async () => {
+  if (!stripePromise) {
+    const res = await fetch('http://localhost:5001/api/stripe/publishable-key');
+    const data = await res.json();
+    stripePromise = loadStripe(data.publishable_key);
+  }
+  return stripePromise;
+};
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -21,6 +35,13 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [errors, setErrors] = useState({});
+  const [khaltiLoading, setKhaltiLoading] = useState(false);
+
+  // Stripe state
+  const [stripeInstance, setStripeInstance] = useState(null);
+  const [stripeClientSecret, setStripeClientSecret] = useState(null);
+  const [stripePendingOrderId, setStripePendingOrderId] = useState(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
 
   const subtotal = getCartTotal();
   const shippingCost = subtotal > 100 ? 0 : 15;
@@ -67,6 +88,30 @@ export default function CheckoutPage() {
     const userData = getUserData();
     if (!userData?.token) { navigate('/login'); return; }
 
+    // Khalti payment — redirect to Khalti
+    if (paymentMethod === 'khalti') {
+      setKhaltiLoading(true);
+      try {
+        const res = await fetch('http://localhost:5001/api/khalti/initiate', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shippingAddress: shipping })
+        });
+        const data = await res.json();
+        if (data.success && data.payment_url) {
+          // Redirect to Khalti hosted payment page
+          window.location.href = data.payment_url;
+        } else {
+          alert(`❌ ${data.error}`);
+        }
+      } catch (e) {
+        alert(`❌ ${e.message}`);
+      } finally {
+        setKhaltiLoading(false);
+      }
+      return;
+    }
+
     setPlacing(true);
     try {
       const res = await fetch('http://localhost:5001/api/orders', {
@@ -80,8 +125,8 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (data.success) {
         setOrderId(data.order.order_id);
-        await fetchCart(); // refresh cart (now empty)
-        setStep(3); // success screen
+        await fetchCart();
+        setStep(3);
       } else {
         alert(`❌ ${data.error}`);
       }
@@ -216,23 +261,30 @@ export default function CheckoutPage() {
                 {/* Options */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
                   {[
-                    { value: 'cod', icon: Truck, title: 'Cash on Delivery', desc: 'Pay when your order arrives' },
-                    { value: 'card', icon: CreditCard, title: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex' },
-                  ].map(({ value, icon: Icon, title, desc }) => (
+                    { value: 'cod',    icon: Truck,       title: 'Cash on Delivery',      desc: 'Pay when your order arrives' },
+                    { value: 'stripe', icon: CreditCard,  title: 'Credit / Debit Card',   desc: 'Visa, Mastercard, Amex — powered by Stripe', stripe: true },
+                    { value: 'khalti', icon: CreditCard,  title: 'Khalti',                desc: 'Pay securely via Khalti digital wallet', khalti: true },
+                  ].map(({ value, icon: Icon, title, desc, khalti, stripe: isStripe }) => (
                     <div
                       key={value}
                       onClick={() => setPaymentMethod(value)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 14, border: `2px solid ${paymentMethod === value ? '#111' : '#e5e7eb'}`, cursor: 'pointer', background: paymentMethod === value ? '#f9fafb' : '#fff', transition: 'all 0.15s' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 14, border: `2px solid ${paymentMethod === value ? '#5C2D91' : '#e5e7eb'}`, cursor: 'pointer', background: paymentMethod === value ? '#faf5ff' : '#fff', transition: 'all 0.15s' }}
                     >
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: paymentMethod === value ? '#111' : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon size={18} color={paymentMethod === value ? '#fff' : '#6b7280'} />
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: khalti ? '#5C2D91' : isStripe ? '#5469d4' : paymentMethod === value ? '#111' : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {khalti ? (
+                          <span style={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>K</span>
+                        ) : isStripe ? (
+                          <span style={{ color: '#fff', fontWeight: 800, fontSize: 11 }}>S</span>
+                        ) : (
+                          <Icon size={18} color={paymentMethod === value ? '#fff' : '#6b7280'} />
+                        )}
                       </div>
                       <div style={{ flex: 1 }}>
                         <p style={{ fontSize: 14, fontWeight: 700, color: '#111', margin: 0 }}>{title}</p>
                         <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>{desc}</p>
                       </div>
-                      <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${paymentMethod === value ? '#111' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {paymentMethod === value && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#111' }} />}
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${paymentMethod === value ? '#5C2D91' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {paymentMethod === value && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#5C2D91' }} />}
                       </div>
                     </div>
                   ))}
@@ -348,9 +400,56 @@ export default function CheckoutPage() {
                 <button onClick={handleNext} style={{ width: '100%', padding: '14px 0', background: '#111', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
                   Continue →
                 </button>
+              ) : paymentMethod === 'stripe' ? (
+                /* Stripe inline payment form */
+                stripeClientSecret && stripeInstance ? (
+                  <Elements stripe={stripeInstance} options={{ clientSecret: stripeClientSecret }}>
+                    <StripePaymentForm
+                      clientSecret={stripeClientSecret}
+                      pendingOrderId={stripePendingOrderId}
+                      total={total}
+                      onSuccess={(order) => { setOrderId(order.order_id); fetchCart(); setStep(3); }}
+                      onError={(msg) => alert(`❌ ${msg}`)}
+                    />
+                  </Elements>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const userData = getUserData();
+                      if (!userData?.token) { navigate('/login'); return; }
+                      setStripeLoading(true);
+                      try {
+                        const res = await fetch('http://localhost:5001/api/stripe/create-payment-intent', {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${userData.token}`, 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ shippingAddress: shipping })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          const instance = await getStripe();
+                          setStripeInstance(instance);
+                          setStripeClientSecret(data.client_secret);
+                          setStripePendingOrderId(data.pending_order_id);
+                        } else {
+                          alert(`❌ ${data.error}`);
+                        }
+                      } catch (e) {
+                        alert(`❌ ${e.message}`);
+                      } finally {
+                        setStripeLoading(false);
+                      }
+                    }}
+                    disabled={stripeLoading}
+                    style={{ width: '100%', padding: '14px 0', background: stripeLoading ? '#6b7280' : '#5469d4', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: stripeLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  >
+                    <Lock size={16} /> {stripeLoading ? 'Loading...' : `Pay with Stripe — ${formatPrice(total)}`}
+                  </button>
+                )
               ) : (
-                <button onClick={handlePlaceOrder} disabled={placing} style={{ width: '100%', padding: '14px 0', background: placing ? '#6b7280' : '#16a34a', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: placing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  {placing ? 'Placing Order...' : (
+                <button onClick={handlePlaceOrder} disabled={placing || khaltiLoading} style={{ width: '100%', padding: '14px 0', background: placing || khaltiLoading ? '#6b7280' : paymentMethod === 'khalti' ? '#5C2D91' : '#16a34a', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: placing || khaltiLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  {placing || khaltiLoading ? 'Processing...' : paymentMethod === 'khalti' ? (
+                    <>Pay with Khalti — {formatPrice(total)}</>
+                  ) : (
                     <><Shield size={16} /> Place Order — {formatPrice(total)}</>
                   )}
                 </button>

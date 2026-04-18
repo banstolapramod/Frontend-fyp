@@ -93,6 +93,7 @@ export default function VendorDashboard() {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'earnings', label: 'Earnings', icon: DollarSign },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'profile', label: 'Profile', icon: Store },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -244,6 +245,7 @@ export default function VendorDashboard() {
               />
             )}
             {activeTab === 'orders' && <OrdersContent />}
+            {activeTab === 'earnings' && <EarningsContent />}
             {activeTab === 'customers' && <CustomersContent />}
             {activeTab === 'profile' && <ProfileContent />}
             {activeTab === 'settings' && <SettingsContent />}
@@ -997,6 +999,132 @@ function SettingsContent() {
             {saving ? 'Updating...' : 'Update Password'}
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// Earnings Content Component
+function EarningsContent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { getUserData } = require('../../utils/auth');
+    const userData = getUserData();
+    fetch('http://localhost:5001/api/payouts/vendor/earnings', {
+      headers: { 'Authorization': `Bearer ${userData.token}` }
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setData(d); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const fmt = (n) => 'Rs. ' + (parseFloat(n || 0) * 100).toLocaleString('en-NP', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+  const fmtMonth = (d) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+    </div>
+  );
+
+  if (!data) return (
+    <div className="text-center py-12 text-gray-400">Failed to load earnings data.</div>
+  );
+
+  const { earnings, payouts, monthly_breakdown, commission_rate } = data;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold text-gray-900">My Earnings</h2>
+        <p className="text-gray-500 mt-1">Platform commission: {(commission_rate * 100).toFixed(0)}% · Payouts are processed manually by admin</p>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Gross Revenue', value: fmt(earnings.gross_revenue), bg: 'bg-blue-50', color: 'text-blue-700' },
+          { label: 'Platform Fee', value: fmt(earnings.commission_amount), bg: 'bg-red-50', color: 'text-red-600' },
+          { label: 'Net Earnings', value: fmt(earnings.net_earnings), bg: 'bg-emerald-50', color: 'text-emerald-700' },
+          { label: 'Pending Payout', value: fmt(earnings.pending_payout), bg: earnings.pending_payout > 0 ? 'bg-amber-50' : 'bg-gray-50', color: earnings.pending_payout > 0 ? 'text-amber-700' : 'text-gray-500' },
+        ].map(({ label, value, bg, color }) => (
+          <div key={label} className={`${bg} rounded-2xl p-5 border border-gray-100`}>
+            <p className="text-xs font-semibold text-gray-500 mb-1">{label}</p>
+            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Payout status banner */}
+      <div className={`rounded-2xl p-5 border ${earnings.pending_payout > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${earnings.pending_payout > 0 ? 'bg-amber-100' : 'bg-green-100'}`}>
+            {earnings.pending_payout > 0 ? '⏳' : '✅'}
+          </div>
+          <div>
+            <p className={`font-bold text-sm ${earnings.pending_payout > 0 ? 'text-amber-800' : 'text-green-800'}`}>
+              {earnings.pending_payout > 0
+                ? `${fmt(earnings.pending_payout)} is pending payout from admin`
+                : 'All earnings have been paid out'}
+            </p>
+            <p className={`text-xs mt-0.5 ${earnings.pending_payout > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+              {earnings.pending_payout > 0
+                ? 'Admin will process your payout manually. Contact admin if overdue.'
+                : `Total paid: ${fmt(earnings.total_paid)}`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Monthly breakdown */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-bold text-gray-700">Monthly Breakdown</p>
+          </div>
+          {monthly_breakdown.length === 0 ? (
+            <p className="text-center text-gray-400 py-8 text-sm">No delivered orders yet</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {monthly_breakdown.map((m, i) => (
+                <div key={i} className="flex items-center justify-between px-5 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{fmtMonth(m.month)}</p>
+                    <p className="text-xs text-gray-400">Gross: {fmt(m.gross)} · Fee: {fmt(m.commission)}</p>
+                  </div>
+                  <p className="text-sm font-bold text-emerald-700">{fmt(m.net)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Payout history */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-bold text-gray-700">Payout History</p>
+          </div>
+          {payouts.length === 0 ? (
+            <p className="text-center text-gray-400 py-8 text-sm">No payouts received yet</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {payouts.map(p => (
+                <div key={p.payout_id} className="flex items-center justify-between px-5 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{fmt(p.amount)}</p>
+                    <p className="text-xs text-gray-400">{fmtDate(p.created_at)}{p.note ? ` · ${p.note}` : ''}</p>
+                  </div>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">Received</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
