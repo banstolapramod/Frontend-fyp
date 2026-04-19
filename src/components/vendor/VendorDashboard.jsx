@@ -306,7 +306,7 @@ function DashboardContent() {
   return (
     <div className="space-y-8 px-1">
       <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold mb-2">Welcome to your store! 🏪</h2>
+        <h2 className="text-3xl font-bold mb-2">Welcome to your store! </h2>
         <p className="text-emerald-100">Manage your products, track orders, and grow your business.</p>
       </div>
 

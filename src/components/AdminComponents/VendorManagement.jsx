@@ -5,25 +5,6 @@ import {
 } from 'lucide-react';
 import { getUserData, isAdmin, getAuthHeaders } from '../../utils/auth';
 
-// Debug function to test token
-const debugToken = () => {
-  const userData = getUserData();
-  if (userData && userData.token) {
-    try {
-      // Decode token to see its contents
-      const payload = JSON.parse(atob(userData.token.split('.')[1]));
-      console.log("🔍 Current token payload:", payload);
-      console.log("🔍 Token expiry:", new Date(payload.exp * 1000));
-      console.log("🔍 Current time:", new Date());
-      console.log("🔍 Token valid:", payload.exp * 1000 > Date.now());
-    } catch (error) {
-      console.error("❌ Error decoding token:", error);
-    }
-  } else {
-    console.log("❌ No token found");
-  }
-};
-
 export default function VendorManagement() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,24 +12,14 @@ export default function VendorManagement() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(null);
-  const [stats, setStats] = useState({
-    approved: 0,
-    pending: 0,
-    rejected: 0,
-    total: 0
-  });
+  const [stats, setStats] = useState({ approved: 0, pending: 0, rejected: 0, total: 0 });
 
-  // Check user role on component mount
   useEffect(() => {
-    // Debug current token
-    debugToken();
-    
     if (!isAdmin()) {
       setError('Access denied. Admin privileges required.');
       setLoading(false);
       return;
     }
-    
     fetchVendors();
   }, []);
 
@@ -303,20 +274,41 @@ export default function VendorManagement() {
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-professional border border-gray-100 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-gray-700">Status:</span>
-              <select 
-                value={statusFilter} 
+              <select
+                value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-professional py-2 px-3 text-sm"
+                style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 12px', fontSize: 13, outline: 'none', background: '#fff', cursor: 'pointer' }}
               >
-                <option>All</option>
-                <option>Approved</option>
-                <option>Pending</option>
-                <option>Rejected</option>
+                <option value="All">All</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
               </select>
+            </div>
+            {/* Quick filter buttons */}
+            <div className="flex items-center gap-2">
+              {['All', 'Approved', 'Pending', 'Rejected'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  style={{
+                    padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                    border: 'none', cursor: 'pointer',
+                    background: statusFilter === s
+                      ? s === 'Approved' ? '#dcfce7' : s === 'Pending' ? '#fef9c3' : s === 'Rejected' ? '#fee2e2' : '#111'
+                      : '#f3f4f6',
+                    color: statusFilter === s
+                      ? s === 'Approved' ? '#15803d' : s === 'Pending' ? '#854d0e' : s === 'Rejected' ? '#b91c1c' : '#fff'
+                      : '#6b7280'
+                  }}
+                >
+                  {s} {s !== 'All' && `(${stats[s.toLowerCase()]})`}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -324,10 +316,10 @@ export default function VendorManagement() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search vendors..."
+              placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-professional pl-9 pr-4 py-2 w-64 text-sm"
+              style={{ paddingLeft: 36, paddingRight: 16, paddingTop: 8, paddingBottom: 8, border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13, width: 260, outline: 'none' }}
             />
           </div>
         </div>
