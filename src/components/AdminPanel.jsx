@@ -184,11 +184,6 @@ export default function AdminPanel() {
               >
                 <Home className="w-5 h-5 text-gray-600" />
               </button>
-
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
             </div>
           </div>
         </header>
@@ -235,13 +230,12 @@ function DashboardContent() {
     { label: 'Total Orders',     value: stats?.orders?.total ?? '—',             icon: ShoppingBag, bg: 'bg-purple-50',  color: 'text-purple-600',  sub: `${stats?.orders?.pending ?? 0} pending` },
     { label: 'Total Revenue',    value: stats?.orders ? formatPrice(stats?.orders.revenue) : '—', icon: DollarSign, bg: 'bg-amber-50', color: 'text-amber-600', sub: `${stats?.orders?.delivered ?? 0} delivered` },
     { label: 'Active Vendors',   value: stats?.vendors?.approved ?? '—',         icon: Store,       bg: 'bg-teal-50',    color: 'text-teal-600',    sub: `${stats?.vendors?.pending ?? 0} pending approval` },
-    { label: 'New Users (30d)',  value: stats?.users?.newUsers30Days ?? '—',     icon: Users,       bg: 'bg-pink-50',    color: 'text-pink-600',    sub: 'last 30 days' },
   ];
 
   return (
     <div className="space-y-8 px-2">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl px-1">
-        <h2 className="text-3xl font-bold mb-2">Welcome back! 👋</h2>
+        <h2 className="text-3xl font-bold mb-2">Welcome back!</h2>
         <p className="text-blue-100">Here's what's happening with your store today.</p>
       </div>
 

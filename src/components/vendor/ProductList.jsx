@@ -7,12 +7,19 @@ import { formatPrice } from '../../utils/currency';
 import ImageWithFallback from '../ImageWithFallback';
 import './VendorStyles.css';
 
-export default function ProductList({ onAddProduct, onEditProduct }) {
+export default function ProductList({ onAddProduct, onEditProduct, externalSearch = '' }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearch);
   const [deletingProduct, setDeletingProduct] = useState(null);
+
+  // Sync external search from header bar
+  useEffect(() => {
+    if (externalSearch !== undefined) {
+      setSearchQuery(externalSearch);
+    }
+  }, [externalSearch]);
 
   useEffect(() => {
     fetchProducts();

@@ -98,11 +98,6 @@ export default function CustomerDashboard({ initialTab = 'dashboard' }) {
                 <Home className="w-5 h-5 text-gray-600" />
               </button>
 
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-
               <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
                 <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">{userName.charAt(0).toUpperCase()}</span>
@@ -601,18 +596,6 @@ function SettingsContent({ userId }) {
         </form>
       </div>
 
-      {/* Account Actions */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Account Actions</h3>
-        <div className="space-y-3">
-          <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-left">
-            Download My Data
-          </button>
-          <button className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-left">
-            Delete Account
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

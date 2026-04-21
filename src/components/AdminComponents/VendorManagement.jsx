@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Store, CheckCircle, XCircle, Eye, Edit, Filter, 
-  Plus, Search, Calendar, Mail, AlertCircle, RefreshCw
+  Search, Calendar, Mail, AlertCircle, RefreshCw, X, Save
 } from 'lucide-react';
 import { getUserData, isAdmin, getAuthHeaders } from '../../utils/auth';
 
@@ -13,6 +13,10 @@ export default function VendorManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [stats, setStats] = useState({ approved: 0, pending: 0, rejected: 0, total: 0 });
+  const [editVendor, setEditVendor] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [viewVendor, setViewVendor] = useState(null);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -138,11 +142,43 @@ export default function VendorManagement() {
     }
   };
 
+  const openEdit = (vendor) => {
+    setEditVendor(vendor);
+    setEditForm({ name: vendor.name, email: vendor.email });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editVendor) return;
+    setSavingEdit(true);
+    try {
+      const vid = editVendor.id || editVendor.user_id;
+      const response = await fetch(`http://localhost:5001/api/admin/users/${vid}`, {
+        method: 'PATCH',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editForm.name, email: editForm.email, role: 'vendor' })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update vendor');
+      }
+      setVendors(prev => prev.map(v =>
+        (v.id || v.user_id) === vid ? { ...v, name: editForm.name, email: editForm.email } : v
+      ));
+      setEditVendor(null);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   // Filter vendors based on status and search
   const filteredVendors = vendors.filter(vendor => {
     const matchesStatus = statusFilter === 'All' || vendor.vendor_status === statusFilter.toLowerCase();
-    const matchesSearch = vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         vendor.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const name = (vendor.name || '').toLowerCase();
+    const email = (vendor.email || '').toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch = query === '' || name.includes(query) || email.includes(query);
     return matchesStatus && matchesSearch;
   });
 
@@ -214,10 +250,6 @@ export default function VendorManagement() {
             Manage vendor accounts and approve new vendor registrations
           </p>
         </div>
-        <button className="btn-professional bg-emerald-600 text-white hover:bg-emerald-700 flex items-center space-x-2">
-          <Plus className="w-5 h-5" />
-          <span>Add Vendor</span>
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -319,8 +351,16 @@ export default function VendorManagement() {
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ paddingLeft: 36, paddingRight: 16, paddingTop: 8, paddingBottom: 8, border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13, width: 260, outline: 'none' }}
+              style={{ paddingLeft: 36, paddingRight: searchQuery ? 32 : 16, paddingTop: 8, paddingBottom: 8, border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 13, width: 260, outline: 'none' }}
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 16, lineHeight: 1 }}
+              >
+                ×
+              </button>
+            )}
           </div>
         </div>
 
@@ -425,10 +465,10 @@ export default function VendorManagement() {
                           {updatingStatus === vid ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Approve'}
                         </button>
                       )}
-                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details">
+                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details" onClick={() => setViewVendor(vendor)}>
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Edit">
+                      <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors" title="Edit" onClick={() => openEdit(vendor)}>
                         <Edit className="w-4 h-4" />
                       </button>
                     </div>
@@ -446,6 +486,92 @@ export default function VendorManagement() {
           </div>
         )}
       </div>
+
+      {/* View Modal */}
+      {viewVendor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Vendor Details</h2>
+              <button onClick={() => setViewVendor(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-2xl">
+                  {viewVendor.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-gray-900">{viewVendor.name}</p>
+                  {getStatusBadge(viewVendor.vendor_status)}
+                </div>
+              </div>
+              {[
+                ['Email', viewVendor.email],
+                ['Vendor ID', viewVendor.id || viewVendor.user_id],
+                ['Joined', new Date(viewVendor.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
+                ['Status', viewVendor.vendor_status],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-sm text-gray-500">{label}</span>
+                  <span className="text-sm font-semibold text-gray-800 text-right max-w-xs truncate">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editVendor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">Edit Vendor</h2>
+              <button onClick={() => setEditVendor(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setEditVendor(null)}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit}
+                  className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {savingEdit ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

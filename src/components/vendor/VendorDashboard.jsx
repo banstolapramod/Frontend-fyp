@@ -216,7 +216,17 @@ export default function VendorDashboard() {
                   type="text"
                   placeholder="Search products, orders..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (e.target.value.trim()) {
+                      // Switch to relevant tab based on current context
+                      if (activeTab === 'orders') setActiveTab('orders');
+                      else setActiveTab('products');
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') { setSearchQuery(''); }
+                  }}
                   className="w-96 pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
                 />
               </div>
@@ -240,11 +250,12 @@ export default function VendorDashboard() {
             {activeTab === 'dashboard' && <DashboardContent />}
             {activeTab === 'products' && (
               <ProductsContent 
+                searchQuery={searchQuery}
                 onAddProduct={handleAddProduct}
                 onEditProduct={handleEditProduct}
               />
             )}
-            {activeTab === 'orders' && <OrdersContent />}
+            {activeTab === 'orders' && <OrdersContent externalSearch={searchQuery} />}
             {activeTab === 'earnings' && <EarningsContent />}
             {activeTab === 'customers' && <CustomersContent />}
             {activeTab === 'profile' && <ProfileContent />}
@@ -358,7 +369,7 @@ function DashboardContent() {
 }
 
 // Products Content Component
-function ProductsContent({ onAddProduct, onEditProduct }) {
+function ProductsContent({ onAddProduct, onEditProduct, searchQuery = '' }) {
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
 
   return (
@@ -405,11 +416,13 @@ function ProductsContent({ onAddProduct, onEditProduct }) {
           <ProductTable 
             onAddProduct={onAddProduct}
             onEditProduct={onEditProduct}
+            externalSearch={searchQuery}
           />
         ) : (
           <ProductList 
             onAddProduct={onAddProduct}
             onEditProduct={onEditProduct}
+            externalSearch={searchQuery}
           />
         )}
       </div>
@@ -418,7 +431,7 @@ function ProductsContent({ onAddProduct, onEditProduct }) {
 }
 
 // Orders Content Component
-function OrdersContent() {
+function OrdersContent({ externalSearch = '' }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
@@ -519,14 +532,27 @@ function OrdersContent() {
     return item.image_url.startsWith('http') ? item.image_url : `http://localhost:5001${item.image_url}`;
   };
 
-  const filtered = filterStatus === 'all' ? orders : orders.filter(o => o.order_status === filterStatus);
+  const filtered = orders.filter(o => {
+    const matchesStatus = filterStatus === 'all' || o.order_status === filterStatus;
+    const query = (externalSearch || '').toLowerCase().trim();
+    const matchesSearch = query === '' ||
+      (o.order_id || '').toLowerCase().includes(query) ||
+      (o.customer_name || o.full_name || '').toLowerCase().includes(query) ||
+      (o.customer_email || o.email || '').toLowerCase().includes(query) ||
+      (o.city || '').toLowerCase().includes(query);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Order Management</h2>
-          <p className="text-gray-500 mt-1">Track and manage customer orders for your products</p>
+          <p className="text-gray-500 mt-1">
+            {externalSearch
+              ? `Showing results for "${externalSearch}" — ${filtered.length} order${filtered.length !== 1 ? 's' : ''} found`
+              : 'Track and manage customer orders for your products'}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (

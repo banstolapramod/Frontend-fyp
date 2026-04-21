@@ -7,16 +7,24 @@ import { getUserData } from '../../utils/auth';
 import { formatPrice } from '../../utils/currency';
 import './VendorStyles.css';
 
-export default function ProductTable({ onAddProduct, onEditProduct }) {
+export default function ProductTable({ onAddProduct, onEditProduct, externalSearch = '' }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearch);
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [deletingProduct, setDeletingProduct] = useState(null);
+
+  // Sync external search from header bar
+  useEffect(() => {
+    if (externalSearch !== undefined) {
+      setSearchQuery(externalSearch);
+      setCurrentPage(1);
+    }
+  }, [externalSearch]);
 
   useEffect(() => {
     fetchProducts();
